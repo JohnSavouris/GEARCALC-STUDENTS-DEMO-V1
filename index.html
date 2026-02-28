@@ -3,27 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GEARCALC-PRO — Scientific Demo (Geometry / εα / Load Sharing / NN-STE)</title>
+  <title>GEARCALC STUDENT — Involute Spur Gear Lab Suite</title>
+
   <style>
     :root{
-      --bg:#070c15;
-      --bg2:#0b1220;
-      --card:#0f1a2b;
-      --card2:#101c31;
-      --text:#eaf0ff;
-      --muted:#aeb8d6;
+      --bg0:#070B14;
+      --bg1:#0A1020;
+      --text:#EAF0FF;
+      --muted:#AEB8D6;
+      --muted2:#8C97B8;
       --line:rgba(255,255,255,.10);
-      --line2:rgba(255,255,255,.06);
-      --accent:#7aa2ff;
-      --accent2:#3ddc97;
-      --warn:#ffcc66;
-      --bad:#ff6b6b;
-      --good:#52ffa8;
-      --shadow: 0 14px 38px rgba(0,0,0,.35);
-      --r: 16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+      --blue:#7AA2FF;
+      --red:#FF6B6B;
+      --green:#3DDC97;
+
+      --shadow: 0 18px 44px rgba(0,0,0,.45);
+      --shadow2: 0 10px 28px rgba(0,0,0,.32);
+      --r16:16px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -31,568 +33,680 @@
       font-family:var(--sans);
       color:var(--text);
       background:
-        radial-gradient(1200px 900px at 10% -15%, rgba(122,162,255,.15), transparent 60%),
-        radial-gradient(900px 700px at 95% 0%, rgba(61,220,151,.08), transparent 55%),
-        linear-gradient(180deg, #050911, #08101c 45%, #050911);
+        radial-gradient(1300px 900px at 12% -10%, rgba(122,162,255,.22), transparent 60%),
+        radial-gradient(900px 700px at 90% 0%, rgba(61,220,151,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 55%, var(--bg0));
     }
 
-    .app{
+    .shell{
       display:grid;
-      grid-template-columns: 340px 1fr;
-      gap:16px;
+      grid-template-columns: 320px 1fr 300px;
+      grid-template-rows: auto 1fr;
+      gap:14px;
+      padding:14px;
       min-height:100vh;
-      padding:16px;
     }
-    @media (max-width:1150px){
-      .app{grid-template-columns:1fr}
-      .sidebar,.sticky{position:static!important}
+    @media (max-width: 1180px){
+      .shell{ grid-template-columns:1fr; grid-template-rows:auto auto auto auto; }
     }
 
-    .sidebar{
+    .topbar{ grid-column:1/-1; position:sticky; top:14px; z-index:50; }
+    .sidebar{ grid-column:1; grid-row:2; }
+    .main{ grid-column:2; grid-row:2; }
+    .results{ grid-column:3; grid-row:2; }
+
+    @media (max-width:1180px){
+      .sidebar,.main,.results{ grid-column:1; grid-row:auto; }
+      .topbar{ position:static; }
+    }
+
+    .sidebar,.results{
       position:sticky;
-      top:16px;
+      top:92px; /* below sticky topbar */
       align-self:start;
       display:flex;
       flex-direction:column;
-      gap:14px;
-      max-height:calc(100vh - 32px);
-      overflow:auto;
-      padding-right:2px;
-    }
-    .main{display:flex;flex-direction:column;gap:16px;min-width:0}
-    .sticky{position:sticky;top:16px;z-index:20}
-
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
-      overflow:hidden;
+      gap:12px;
       min-width:0;
     }
-    .head{
-      padding:12px 14px;
+    @media (max-width:1180px){
+      .sidebar,.results{ position:static; top:auto; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:var(--r16);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(6px);
+    }
+    .card .head{
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
       border-bottom:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:rgba(255,255,255,.02);
-      flex-wrap:wrap;
+      background: rgba(255,255,255,.02);
     }
-    .head h2{
+    .card .head h2{
       margin:0;
-      font-size:13px;
-      font-weight:800;
-      letter-spacing:.02em;
-    }
-    .body{padding:12px 14px;min-width:0}
-
-    .brand .lab{
-      font-size:11px;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      margin-bottom:4px;
-    }
-    .brand .title{
-      font-size:20px;
-      font-weight:850;
-      line-height:1.05;
-      margin-bottom:6px;
-    }
-    .brand .subtitle{
       font-size:12px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
       color:var(--muted);
-      line-height:1.35;
+      font-weight:900;
     }
+    .card .body{ padding:10px 12px; }
 
-    .nav{display:flex;flex-direction:column;gap:8px}
-    .navbtn{
-      width:100%;
+    .topbarInner{
+      padding:10px 12px;
       display:flex;
       align-items:center;
-      gap:10px;
-      padding:11px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-      color:var(--text);
-      cursor:pointer;
-      font-weight:750;
-      font-size:13px;
-      transition:.15s ease;
-      text-align:left;
-    }
-    .navbtn:hover{
-      transform:translateY(-1px);
-      background:rgba(255,255,255,.05);
-      border-color:rgba(255,255,255,.16);
-    }
-    .navbtn.active{
-      background:rgba(122,162,255,.15);
-      border-color:rgba(122,162,255,.35);
-      box-shadow:inset 0 0 0 1px rgba(122,162,255,.18);
-    }
-    .navbtn small{margin-left:auto;color:var(--muted);font-weight:700}
-
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    @media (max-width:600px){ .grid,.grid3{grid-template-columns:1fr} }
-
-    .field{display:flex;flex-direction:column;gap:6px}
-    .field label{font-size:12px;color:var(--muted);line-height:1.2}
-    .field input,.field select, .field textarea{
-      width:100%;
-      background:rgba(0,0,0,.20);
-      color:var(--text);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:12px;
-      padding:10px 10px;
-      outline:none;
-      font-size:13px;
-      font-family:inherit;
-    }
-    .field textarea{
-      min-height:110px;
-      resize:vertical;
-      font-family:var(--mono);
-    }
-    .field input:focus,.field select:focus,.field textarea:focus{
-      border-color:rgba(122,162,255,.50);
-      box-shadow:0 0 0 3px rgba(122,162,255,.16);
-    }
-
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .btn{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.05);
-      color:var(--text);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:750;
-      cursor:pointer;
-      transition:.15s ease;
-      user-select:none;
-    }
-    .btn:hover{
-      transform:translateY(-1px);
-      background:rgba(255,255,255,.08);
-      border-color:rgba(255,255,255,.20);
-    }
-    .btn.primary{
-      background:rgba(122,162,255,.18);
-      border-color:rgba(122,162,255,.40);
-    }
-    .btn.good{
-      background:rgba(61,220,151,.12);
-      border-color:rgba(61,220,151,.35);
-    }
-    .btn.bad{
-      background:rgba(255,107,107,.10);
-      border-color:rgba(255,107,107,.35);
-    }
-
-    .toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-    .toggle input{transform:translateY(1px)}
-
-    .status{
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.16);
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.35;
-    }
-    .status.ok{border-color:rgba(82,255,168,.30)}
-    .status.warn{border-color:rgba(255,204,102,.35)}
-    .status.bad{border-color:rgba(255,107,107,.35)}
-
-    .topbar{
-      padding:12px 14px;
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
       gap:12px;
       flex-wrap:wrap;
     }
-    .topTitle{font-size:16px;font-weight:850;line-height:1.15}
-    .topDesc{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35;max-width:90ch}
-    .topRight{
-      margin-left:auto;
-      display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      gap:8px;
-      min-width:260px;
+    .brandMini{ display:flex; flex-direction:column; gap:2px; min-width:220px; }
+    .brandMini .kicker{
+      font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2);
+      white-space:nowrap;
     }
-    .pillrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .pill{
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      font-size:12px;
-      color:var(--muted);
+    .brandMini .title{
+      font-size:18px; font-weight:950; letter-spacing:.01em; line-height:1.1;
       white-space:nowrap;
     }
 
-    .page{display:none;flex-direction:column;gap:16px;min-width:0}
-    .page.active{display:flex}
-
-    .badgeRow{display:flex;gap:10px;flex-wrap:wrap}
-    .badge{
-      display:inline-flex;
+    .navTop{
+      display:flex;
       align-items:center;
       gap:8px;
-      padding:8px 10px;
-      border-radius:12px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-left:auto;
+    }
+    .navbtn{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:950;
+      font-size:13px;
+      transition:.15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .navbtn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(255,255,255,.18);
+      background:rgba(255,255,255,.06);
+      box-shadow:var(--shadow2);
+    }
+    .navbtn.active{
+      background:rgba(122,162,255,.16);
+      border-color:rgba(122,162,255,.40);
+      box-shadow: inset 0 0 0 1px rgba(122,162,255,.18);
+    }
+
+    .topActions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+    .field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .field label{ font-size:12px; color:var(--muted); line-height:1.15; }
+    .field input, .field select{
+      width:100%;
+      background:rgba(0,0,0,.22);
+      color:var(--text);
       border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.16);
+      border-radius:14px;
+      padding:9px 10px;
+      outline:none;
+      font-size:13px;
+    }
+    .field input:focus, .field select:focus{
+      border-color:rgba(122,162,255,.55);
+      box-shadow: 0 0 0 3px rgba(122,162,255,.18);
+    }
+
+    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .sep{
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+      margin:10px 0;
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:10px;
       font-size:13px;
       color:var(--muted);
+      user-select:none;
     }
-    .badge strong{color:var(--text);font-family:var(--mono);font-weight:750}
+    .toggle input{ transform: translateY(1px); }
 
-    .split{display:grid;grid-template-columns:1.03fr 1fr;gap:16px;min-width:0}
-    .split2{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-width:0}
-    @media (max-width:1180px){ .split,.split2{grid-template-columns:1fr} }
-
-    .canvasWrap{padding:12px;display:flex;flex-direction:column;gap:10px}
-    canvas{
-      width:100%;
-      height:500px;
-      display:block;
-      background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.12));
-      border:1px solid rgba(255,255,255,.10);
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
       border-radius:14px;
+      padding:9px 12px;
+      font-weight:950;
+      font-size:13px;
+      cursor:pointer;
+      transition:.15s transform ease, .15s background ease, .15s border-color ease;
+      user-select:none;
+      white-space:nowrap;
     }
-    .h420{height:420px}
-    .h360{height:360px}
+    .btn:hover{
+      transform: translateY(-1px);
+      background:rgba(255,255,255,.09);
+      border-color:rgba(255,255,255,.18);
+    }
+    .btn.primary{
+      background:rgba(122,162,255,.20);
+      border-color:rgba(122,162,255,.46);
+    }
+    .btn.primary:hover{ background:rgba(122,162,255,.26); }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none !important; }
 
-    .smallnote,.hint{
-      font-size:12px;
-      color:var(--muted);
+    .err{
+      display:none;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,107,107,.45);
+      background:rgba(255,107,107,.08);
+      color:rgba(255,255,255,.92);
+      font-size:13px;
       line-height:1.35;
     }
-    .hint{
-      padding:8px 10px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.02);
+
+    .mono{ font-family:var(--mono); color:var(--text); }
+
+    .main{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+    .page{ display:none; flex-direction:column; gap:12px; min-width:0; }
+    .page.active{ display:flex; }
+
+    .canvasWrap{ padding:10px 12px; display:flex; flex-direction:column; gap:8px; min-width:0; }
+    canvas{
+      width:100%;
+      height:210px;
+      background:linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      display:block;
     }
+    .canvasMesh{ height:340px; }
+    .canvasTall{ height:290px; }
+
+    .split2{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width:1180px){ .split2{ grid-template-columns:1fr; } }
+
+    .splitWide{ display:grid; grid-template-columns: 0.95fr 1.35fr; gap:12px; }
+    @media (max-width:1180px){ .splitWide{ grid-template-columns:1fr; } }
 
     .kv{
       display:grid;
-      grid-template-columns:1fr auto;
+      grid-template-columns: 1fr auto;
       gap:10px 14px;
+      font-size:13px;
       padding:10px 0;
       border-bottom:1px dashed rgba(255,255,255,.10);
-      font-size:13px;
     }
-    .kv:last-child{border-bottom:none}
-    .k{color:var(--muted)}
-    .v{color:var(--text);font-family:var(--mono)}
-
-    .sep{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);margin:4px 0}
-    .mono{font-family:var(--mono)}
+    .kv:last-child{ border-bottom:none; }
+    .kv .k{ color:var(--muted); }
+    .kv .v{ color:var(--text); font-family:var(--mono); font-weight:950; }
 
     .footer{
       color:rgba(255,255,255,.55);
       font-size:12px;
       display:flex;
-      gap:12px;
       justify-content:space-between;
+      gap:12px;
       flex-wrap:wrap;
       padding:0 2px 2px;
+      margin-top:2px;
     }
     .footer .copy{
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.03);
-      border-radius:12px;
+      border-radius:14px;
       padding:10px 12px;
     }
-
-    .logbox{
-      background:#090d16;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:12px;
-      padding:10px;
-      color:#cfe1ff;
-      font-family:var(--mono);
-      font-size:12px;
-      line-height:1.35;
-      white-space:pre-wrap;
-      max-height:260px;
-      overflow:auto;
-    }
-    .tableLite{
-      width:100%;
-      border-collapse:collapse;
-      font-size:12px;
-    }
-    .tableLite th,.tableLite td{
-      border-bottom:1px solid rgba(255,255,255,.08);
-      padding:7px 8px;
-      text-align:left;
-      vertical-align:top;
-    }
-    .tableLite th{color:var(--muted);font-weight:700}
   </style>
 </head>
+
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <section class="card">
-      <div class="body">
-        <div class="brand">
-          <div class="lab">Machine Design Lab — NTUA</div>
-          <div class="title">GEARCALC-PRO<br>Scientific Demo (V4)</div>
-          <div class="subtitle">
-            Modular single-file frontend for <b>Geometry</b>, <b>Contact Ratio</b>, <b>Load Sharing</b>,
-            and <b>NN-based STE</b> via FastAPI backend (<span class="mono">/api/ste</span>).
-          </div>
-        </div>
+<div class="shell">
+
+  <header class="topbar card">
+    <div class="topbarInner">
+      <div class="brandMini">
+        <div class="kicker">Machine Design Laboratory — NTUA</div>
+        <div class="title">GEARCALC PRO</div>
       </div>
-    </section>
+
+      <nav class="navTop" id="navPages">
+        <button class="navbtn active" data-page="geometry">🧩 Geometry</button>
+        <button class="navbtn" data-page="agma">🛡️ AGMA</button>
+        <button class="navbtn" data-page="export">💾 Exports</button>
+      </nav>
+
+      <div class="topActions">
+        <button class="btn primary" id="btnCompute">Compute All</button>
+        <button class="btn" id="btnRedraw">Redraw</button>
+      </div>
+    </div>
+  </header>
+
+  <aside class="sidebar">
 
     <section class="card">
-      <div class="head"><h2>Pages</h2></div>
-      <div class="body"><div class="nav" id="navPages"></div></div>
-    </section>
-
-    <section class="card">
-      <div class="head"><h2>Shared Geometry Inputs</h2></div>
+      <div class="head"><h2>Inputs</h2></div>
       <div class="body">
         <div class="grid">
-          <div class="field"><label>Module m [mm]</label><input id="m" type="number" step="0.01" value="3"></div>
-          <div class="field"><label>Pressure angle α [deg]</label><input id="alpha" type="number" step="0.01" value="20"></div>
-          <div class="field"><label>Pinion teeth z₁</label><input id="z1" type="number" step="1" value="30"></div>
-          <div class="field"><label>Gear teeth z₂</label><input id="z2" type="number" step="1" value="31"></div>
-          <div class="field"><label>Addendum coeff Ck</label><input id="Ck" type="number" step="0.01" value="1.00"></div>
-          <div class="field"><label>Dedendum coeff Cf</label><input id="Cf" type="number" step="0.01" value="1.25"></div>
-          <div class="field"><label>Sampling points N</label><input id="N" type="number" step="50" value="1200"></div>
-          <div class="field"><label>Root fillet target r<sub>c</sub> [mm] (display/use later)</label><input id="rc" type="number" step="0.01" value="0.30"></div>
+          <div class="field">
+            <label>Module m (mm)</label>
+            <input id="m" type="number" step="0.01" value="3">
+          </div>
+          <div class="field">
+            <label>Pressure angle α (deg)</label>
+            <input id="alpha" type="number" step="0.01" value="20">
+          </div>
+
+          <div class="field">
+            <label>Pinion teeth z₁</label>
+            <input id="z1" type="number" step="1" value="30">
+          </div>
+          <div class="field">
+            <label>Gear teeth z₂</label>
+            <input id="z2" type="number" step="1" value="31">
+          </div>
+
+          <div class="field">
+            <label>Addendum C<sub>k</sub></label>
+            <input id="Ck" type="number" step="0.01" value="1.00">
+          </div>
+          <div class="field">
+            <label>Dedendum C<sub>f</sub></label>
+            <input id="Cf" type="number" step="0.01" value="1.25">
+          </div>
+
+          <div class="field">
+            <label>Face width b (mm)</label>
+            <input id="b" type="number" step="0.1" value="20">
+          </div>
+
+          <div class="field">
+            <label>Rack fillet target r<sub>c</sub> (mm)</label>
+            <input id="rc" type="number" step="0.01" value="0.30">
+          </div>
+
+          <div class="field">
+            <label>Sampling N (CP)</label>
+            <input id="N" type="number" step="50" value="1200">
+          </div>
+
+          <div class="field">
+            <label>Speed n₁ (rpm)</label>
+            <input id="rpm" type="number" step="1" value="3000">
+          </div>
+          <div class="field">
+            <label>Torque T₁ (Nm)</label>
+            <input id="torque" type="number" step="1" value="30">
+          </div>
         </div>
 
         <div class="sep"></div>
+
         <div class="row">
-          <label class="toggle"><input type="checkbox" id="showCircles"> Show reference circles</label>
-          <label class="toggle"><input type="checkbox" id="showLOA"> Show LOA</label>
-          <label class="toggle"><input type="checkbox" id="showCP"> Show raw CP</label>
+          <label class="toggle"><input type="checkbox" id="showGear" /> Full outline</label>
+          <label class="toggle"><input type="checkbox" id="showLOA" /> LOA (pinion)</label>
         </div>
-      </div>
-    </section>
 
-    <section class="card">
-      <div class="head"><h2>Shared Operating Inputs</h2></div>
-      <div class="body">
-        <div class="grid">
-          <div class="field"><label>Pinion speed n₁ [rpm]</label><input id="rpm" type="number" step="1" value="3000"></div>
-          <div class="field"><label>Pinion torque T₁ [Nm]</label><input id="torque" type="number" step="1" value="300"></div>
-          <div class="field"><label>Face width b [mm]</label><input id="b" type="number" step="0.1" value="20"></div>
-          <div class="field">
-            <label>Load page X-axis</label>
-            <select id="loadXAxis">
-              <option value="s">s from pitch point [mm]</option>
-              <option value="theta">θ pinion [rad]</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Load page Y-axis</label>
-            <select id="loadYAxis">
-              <option value="FnShared">F_n,shared [N]</option>
-              <option value="RM">R_M [-]</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Transition markers</label>
-            <select id="loadMarkers">
-              <option value="yes">Show</option>
-              <option value="no">Hide</option>
-            </select>
-          </div>
-        </div>
-        <div class="hint" style="margin-top:10px">
-          Shared inputs feed the analytical pages and can also be synced into the NN-based STE request
-          (Z₁, Z₂, m, α, Ck/Cf, and b/m).
-        </div>
-      </div>
-    </section>
+        <div class="sep"></div>
 
-    <section class="card">
-      <div class="head"><h2>STE API (backend)</h2></div>
-      <div class="body">
         <div class="field">
-          <label>API base URL</label>
-          <input id="apiBase" type="text" value="http://127.0.0.1:8000" />
+          <label>Mesh zoom <span class="mono" id="zoomTxt">1.00×</span></label>
+          <input id="zoom" type="range" min="0.60" max="12.00" step="0.05" value="1.00">
         </div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn" id="btnHealth">Check /health</button>
-          <button class="btn good" id="btnSyncSteFromShared">Sync STE params from shared</button>
+
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn" id="btnResetView">Reset view</button>
         </div>
-        <div class="status" id="apiStatus" style="margin-top:10px">API not checked yet.</div>
+
+        <div class="sep"></div>
+        <div class="err" id="errBox"></div>
       </div>
     </section>
 
+  </aside>
+
+  <main class="main">
+
+    <section class="page active" id="pageGeometry">
+
+      <div class="split2">
+        <section class="card">
+          <div class="head"><h2>Pinion</h2></div>
+          <div class="canvasWrap">
+            <canvas id="cvPinion"></canvas>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="head"><h2>Gear</h2></div>
+          <div class="canvasWrap">
+            <canvas id="cvGear"></canvas>
+          </div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="head"><h2>Mesh preview</h2></div>
+        <div class="canvasWrap">
+          <canvas id="cvMesh" class="canvasMesh"></canvas>
+        </div>
+      </section>
+
+    </section>
+
+    <section class="page" id="pageAGMA">
+
+      <div class="splitWide">
+
+        <section class="card">
+          <div class="head">
+            <h2>AGMA inputs</h2>
+            <div class="row">
+              <button class="btn" id="btnAGMAReset">Reset</button>
+              <button class="btn primary" id="btnAGMARecalc">Recalculate</button>
+            </div>
+          </div>
+
+          <div class="body">
+            <div class="grid">
+              <div class="field">
+                <label>Material preset</label>
+                <select id="agmaMat">
+                  <option value="steel250">Steel (HB~250)</option>
+                  <option value="steel300">Steel (HB~300)</option>
+                  <option value="carb">Carburized & hardened</option>
+                  <option value="nitr">Nitrided</option>
+                  <option value="castiron">Cast iron (GG25)</option>
+                  <option value="bronze">Bronze (Al bronze)</option>
+                </select>
+              </div>
+              <div class="field"><label>S<sub>t</sub> [MPa]</label><input id="agmaSt" type="number" step="1" value="430"></div>
+              <div class="field"><label>S<sub>c</sub> [MPa]</label><input id="agmaSc" type="number" step="1" value="1100"></div>
+              <div class="field"><label>E [MPa]</label><input id="agmaE" type="number" step="100" value="206000"></div>
+              <div class="field"><label>ν [-]</label><input id="agmaNu" type="number" step="0.01" value="0.30"></div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="grid">
+              <div class="field"><label>J₁ (pinion)</label><input id="agmaJ1" type="number" step="0.001" value="0.300"></div>
+              <div class="field"><label>J₂ (gear)</label><input id="agmaJ2" type="number" step="0.001" value="0.300"></div>
+
+              <label class="toggle" style="grid-column:1/-1;">
+                <input type="checkbox" id="agmaAutoJ" checked>
+                Auto J
+              </label>
+
+              <div class="field"><label>I (pitting)</label><input id="agmaI" type="number" step="0.001" value="0.100"></div>
+              <div class="field"><label>Z<sub>R</sub></label><input id="agmaZR" type="number" step="0.01" value="1.00"></div>
+
+              <label class="toggle" style="grid-column:1/-1;">
+                <input type="checkbox" id="agmaAutoI" checked>
+                Auto I
+              </label>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="grid">
+              <div class="field"><label>K<sub>o</sub></label><input id="agmaKo" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>K<sub>v</sub></label><input id="agmaKv" type="number" step="0.01" value="1.10"></div>
+              <div class="field"><label>K<sub>s</sub></label><input id="agmaKs" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>K<sub>H</sub></label><input id="agmaKH" type="number" step="0.01" value="1.30"></div>
+              <div class="field"><label>K<sub>B</sub></label><input id="agmaKB" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>m<sub>N</sub></label><input id="agmaMN" type="number" step="0.01" value="1.00"></div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="grid">
+              <div class="field"><label>Y<sub>N</sub></label><input id="agmaYN" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>Z<sub>N</sub></label><input id="agmaZN" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>Y<sub>T</sub></label><input id="agmaYT" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>Y<sub>Z</sub></label><input id="agmaYZ" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>Z<sub>W</sub></label><input id="agmaZW" type="number" step="0.01" value="1.00"></div>
+              <div class="field"><label>S<sub>F</sub></label><input id="agmaSF" type="number" step="0.01" value="1.50"></div>
+              <div class="field"><label>S<sub>H</sub></label><input id="agmaSH" type="number" step="0.01" value="1.50"></div>
+            </div>
+
+            <div class="sep"></div>
+            <div class="err" id="agmaErr"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="head"><h2>AGMA diagrams</h2></div>
+          <div class="canvasWrap">
+            <canvas id="cvAGMAPinion" class="canvasTall"></canvas>
+            <canvas id="cvAGMAGear" class="canvasTall"></canvas>
+
+            <div class="sep"></div>
+
+            <div class="kv"><div class="k">Pinion σF / allow [MPa]</div><div class="v" id="agma_sigF1">—</div></div>
+            <div class="kv"><div class="k">Gear σF / allow [MPa]</div><div class="v" id="agma_sigF2">—</div></div>
+            <div class="kv"><div class="k">σH / allow [MPa]</div><div class="v" id="agma_sigH">—</div></div>
+            <div class="kv"><div class="k">SF₁, SF₂, SH</div><div class="v" id="agma_SFs">—</div></div>
+          </div>
+        </section>
+
+      </div>
+    </section>
+
+    <section class="page" id="pageCSV">
+      <div class="splitWide">
+        <section class="card">
+          <div class="head"><h2>Exports (pinion)</h2></div>
+          <div class="body">
+            <div class="row" style="margin-bottom:10px;">
+              <button class="btn primary" id="btnCSV_Profile" disabled>Profile CSV</button>
+              <button class="btn primary" id="btnCSV_Tooth" disabled>Tooth CSV</button>
+              <button class="btn" id="btnCSV_Gear" disabled>Full outline CSV</button>
+            </div>
+
+            <div class="row" style="margin-bottom:10px;">
+              <div class="field" style="min-width:260px; flex:1;">
+                <label>FEA segment</label>
+                <select id="segSelect" disabled>
+                  <option value="rootL">01_rootCircle_L</option>
+                  <option value="troL">02_trochoid_L</option>
+                  <option value="invL">03_involute_L</option>
+                  <option value="add">04_addendumArc</option>
+                  <option value="invR">05_involute_R</option>
+                  <option value="troR">06_trochoid_R</option>
+                  <option value="rootR">07_rootCircle_R</option>
+                </select>
+              </div>
+              <button class="btn" id="btnCSV_Segment" disabled>Segment CSV</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="head"><h2>Data counts</h2></div>
+          <div class="body">
+            <div id="segListInfo">
+              <div class="kv"><div class="k">—</div><div class="v">—</div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div class="copy">© <span id="year"></span> Machine Design Lab, NTUA — GEARCALC PRO</div>
+      <div class="copy">Geometry • AGMA • Exports</div>
+    </div>
+
+  </main>
+
+  <aside class="results">
     <section class="card">
-      <div class="head"><h2>Status</h2></div>
+      <div class="head"><h2>Key results</h2></div>
       <div class="body">
-        <div class="status" id="statusBox">Ready.</div>
+        <div class="kv"><div class="k">Contact ratio ε<sub>α</sub></div><div class="v" id="res_eps">—</div></div>
+        <div class="kv"><div class="k">Contact path L<sub>LOA</sub> [mm]</div><div class="v" id="res_loa">—</div></div>
+        <div class="kv"><div class="k">AGMA result</div><div class="v" id="res_agma">—</div></div>
       </div>
     </section>
   </aside>
 
-  <main class="main">
-    <section class="card sticky">
-      <div class="topbar">
-        <div>
-          <div class="topTitle" id="pageTitle">Geometry Preview</div>
-          <div class="topDesc" id="pageDesc">Base involute working profile / LOA extraction / contact path visualization.</div>
-        </div>
-        <div class="topRight">
-          <div class="row">
-            <button class="btn primary" id="btnCompute">Compute analytical pages</button>
-            <button class="btn" id="btnRedraw">Redraw current page</button>
-          </div>
-          <div class="pillrow">
-            <div class="pill">Single-file HTML/CSS/JS</div>
-            <div class="pill">Canvas scientific plots</div>
-            <div class="pill">FastAPI /api/ste integration</div>
-            <div class="pill">Modular page registry</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div id="pagesRoot"></div>
-
-    <div class="footer">
-      <div class="copy">© <span id="year"></span> GEARCALC-PRO Demo — NTUA-style scientific frontend shell</div>
-      <div class="copy">Place this file as <span class="mono">index.html</span> next to <span class="mono">api_server.py</span></div>
-    </div>
-  </main>
 </div>
 
 <script>
-(() => {
+(function(){
   "use strict";
 
   const el = (id) => document.getElementById(id);
-  el("year").textContent = new Date().getFullYear();
 
   const ui = {
-    // shared geometry
-    m: el("m"), alpha: el("alpha"), z1: el("z1"), z2: el("z2"), Ck: el("Ck"), Cf: el("Cf"), N: el("N"), rc: el("rc"),
-    showCircles: el("showCircles"), showLOA: el("showLOA"), showCP: el("showCP"),
+    m: el("m"), alpha: el("alpha"), z1: el("z1"), z2: el("z2"),
+    Ck: el("Ck"), Cf: el("Cf"), b: el("b"), rc: el("rc"), N: el("N"),
+    rpm: el("rpm"), torque: el("torque"),
+    showGear: el("showGear"), showLOA: el("showLOA"),
+    zoom: el("zoom"), zoomTxt: el("zoomTxt"), btnResetView: el("btnResetView"),
+    btnCompute: el("btnCompute"), btnRedraw: el("btnRedraw"),
+    navPages: el("navPages"),
+    errBox: el("errBox"),
+    agmaErr: el("agmaErr"),
+    pages: { geometry: el("pageGeometry"), agma: el("pageAGMA"), export: el("pageCSV") },
 
-    // shared operating
-    rpm: el("rpm"), torque: el("torque"), b: el("b"),
-    loadXAxis: el("loadXAxis"), loadYAxis: el("loadYAxis"), loadMarkers: el("loadMarkers"),
+    cvMesh: el("cvMesh"),
+    cvPinion: el("cvPinion"),
+    cvGear: el("cvGear"),
+    cvAGMAPinion: el("cvAGMAPinion"),
+    cvAGMAGear: el("cvAGMAGear"),
 
-    // api
-    apiBase: el("apiBase"), btnHealth: el("btnHealth"), btnSyncSteFromShared: el("btnSyncSteFromShared"), apiStatus: el("apiStatus"),
+    res_eps: el("res_eps"),
+    res_loa: el("res_loa"),
+    res_agma: el("res_agma"),
 
-    // top
-    btnCompute: el("btnCompute"), btnRedraw: el("btnRedraw"), status: el("statusBox"),
-    pageTitle: el("pageTitle"), pageDesc: el("pageDesc"), navPages: el("navPages"), pagesRoot: el("pagesRoot")
+    btnCSV_Profile: el("btnCSV_Profile"),
+    btnCSV_Tooth: el("btnCSV_Tooth"),
+    btnCSV_Gear: el("btnCSV_Gear"),
+    btnCSV_Segment: el("btnCSV_Segment"),
+    segSelect: el("segSelect"),
+    segListInfo: el("segListInfo"),
+
+    agmaMat: el("agmaMat"),
+    agmaSt: el("agmaSt"),
+    agmaSc: el("agmaSc"),
+    agmaE: el("agmaE"),
+    agmaNu: el("agmaNu"),
+    agmaJ1: el("agmaJ1"),
+    agmaJ2: el("agmaJ2"),
+    agmaAutoJ: el("agmaAutoJ"),
+    agmaI: el("agmaI"),
+    agmaAutoI: el("agmaAutoI"),
+    agmaZR: el("agmaZR"),
+    agmaKo: el("agmaKo"),
+    agmaKv: el("agmaKv"),
+    agmaKs: el("agmaKs"),
+    agmaKH: el("agmaKH"),
+    agmaKB: el("agmaKB"),
+    agmaMN: el("agmaMN"),
+    agmaYN: el("agmaYN"),
+    agmaZN: el("agmaZN"),
+    agmaYT: el("agmaYT"),
+    agmaYZ: el("agmaYZ"),
+    agmaZW: el("agmaZW"),
+    agmaSF: el("agmaSF"),
+    agmaSH: el("agmaSH"),
+    btnAGMAReset: el("btnAGMAReset"),
+    btnAGMARecalc: el("btnAGMARecalc"),
+
+    agma_sigF1: el("agma_sigF1"),
+    agma_sigF2: el("agma_sigF2"),
+    agma_sigH: el("agma_sigH"),
+    agma_SFs: el("agma_SFs")
   };
+
+  el("year").textContent = new Date().getFullYear();
+
+  ui.showGear.checked = false;
+  ui.showLOA.checked = false;
 
   const state = {
-    activePageId: null,
-
-    base: null,       // base geometry/LOA/profile
-    contact: null,    // contact metrics
-    load: null,       // load-sharing metrics
-    extra: null,      // omega, power, etc.
-
-    steReq: null,     // last STE request payload
-    ste: null         // last STE response
+    activePage: "geometry",
+    base: null,
+    contact: null,
+    lastProfilePP: null,
+    pinionTooth: null,
+    pinionFull: null,
+    pinionSeg: null,
+    gearTooth: null,
+    gearFull: null,
+    agma: null,
+    view: { zoom: 1.0, panX: 0, panY: 0 },
+    drag: { on:false, x0:0, y0:0, panX0:0, panY0:0 }
   };
 
-  // ---------------------------
-  // Utilities
-  // ---------------------------
-  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
-  const deg2rad = (d) => d*Math.PI/180;
-  const isNum = (v) => Number.isFinite(v);
-
-  function fmt(v, n=6){
-    if (!Number.isFinite(v)) return "—";
-    return Number(v).toFixed(n).replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0+$/,"");
+  function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+  function deg2rad(d){ return d*Math.PI/180; }
+  function fmt(v, nd=6){
+    if (!isFinite(v)) return "—";
+    const s = Number(v).toFixed(nd);
+    return s.replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
   }
-  function fmtSci(v, n=4){
-    if (!Number.isFinite(v)) return "—";
-    return Number(v).toExponential(n);
-  }
-  function setStatus(kind, html){
-    ui.status.className = "status " + (kind || "");
-    ui.status.innerHTML = html;
-  }
-  function setApiStatus(kind, html){
-    ui.apiStatus.className = "status " + (kind || "");
-    ui.apiStatus.innerHTML = html;
+  function showErr(box, msg){
+    if (!msg){ box.style.display="none"; box.textContent=""; return; }
+    box.style.display="block";
+    box.innerHTML = msg;
   }
   function linspace(a,b,n){
-    if (n <= 1) return [a];
-    const out = new Array(n);
-    const h = (b-a)/(n-1);
-    for(let i=0;i<n;i++) out[i] = a + i*h;
-    return out;
+    if (n<=1) return [a];
+    const arr = new Array(n);
+    const step = (b-a)/(n-1);
+    for (let i=0;i<n;i++) arr[i] = a + step*i;
+    return arr;
   }
-  function argmin(arr){
-    let k=0, v=arr[0];
-    for(let i=1;i<arr.length;i++){ if(arr[i] < v){ v = arr[i]; k = i; } }
-    return k;
+  function rotateXY(x, y, ang){
+    const c = Math.cos(ang), s = Math.sin(ang);
+    return [x*c - y*s, x*s + y*c];
   }
-  function cumulativeArcLength(x,y){
-    const s = new Array(x.length).fill(0);
-    for(let i=1;i<x.length;i++) s[i] = s[i-1] + Math.hypot(x[i]-x[i-1], y[i]-y[i-1]);
+  function cumulativeArcLength(x, y){
+    const n = x.length;
+    const s = new Array(n).fill(0);
+    for (let i=1;i<n;i++){
+      s[i] = s[i-1] + Math.hypot(x[i]-x[i-1], y[i]-y[i-1]);
+    }
     return s;
   }
-  function interpLinear(x, y, xq){
-    if (!x || !y || x.length !== y.length || x.length === 0) return NaN;
-    if (x.length === 1) return y[0];
-    const asc = x[x.length-1] >= x[0];
-
-    if (asc){
-      if (xq <= x[0]) return y[0];
-      if (xq >= x[x.length-1]) return y[y.length-1];
-      let lo=0, hi=x.length-1;
-      while(hi-lo > 1){
-        const mid=(lo+hi)>>1;
-        if (x[mid] <= xq) lo=mid; else hi=mid;
-      }
-      const t=(xq-x[lo])/((x[hi]-x[lo]) || 1);
-      return y[lo] + t*(y[hi]-y[lo]);
-    } else {
-      if (xq >= x[0]) return y[0];
-      if (xq <= x[x.length-1]) return y[y.length-1];
-      let lo=0, hi=x.length-1;
-      while(hi-lo > 1){
-        const mid=(lo+hi)>>1;
-        if (x[mid] >= xq) lo=mid; else hi=mid;
-      }
-      const t=(xq-x[lo])/((x[hi]-x[lo]) || 1);
-      return y[lo] + t*(y[hi]-y[lo]);
+  function argmin(arr){
+    let idx = 0, best = arr[0];
+    for (let i=1;i<arr.length;i++){
+      if (arr[i] < best){ best = arr[i]; idx = i; }
     }
+    return idx;
   }
-  function safeFinitePairArrays(x,y){
-    const xo=[], yo=[];
-    const n = Math.min(x?.length || 0, y?.length || 0);
-    for(let i=0;i<n;i++){
-      const xv = x[i], yv = y[i];
-      if (Number.isFinite(xv) && Number.isFinite(yv)){
-        xo.push(xv); yo.push(yv);
-      }
-    }
-    return {x:xo, y:yo};
-  }
-
   function downloadCSV(filename, rows){
-    const csv = rows.map(r => r.join(",")).join("\\n");
+    const csv = rows.map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -603,367 +717,58 @@
     a.remove();
     URL.revokeObjectURL(url);
   }
-
-  async function getJSON(url){
-    const res = await fetch(url);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.detail || ("HTTP " + res.status));
-    return data;
-  }
-  async function postJSON(url, payload){
-    const t0 = performance.now();
-    const res = await fetch(url, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-    const text = await res.text();
-    let data = {};
-    try { data = text ? JSON.parse(text) : {}; } catch { data = {raw:text}; }
-    const dtMs = performance.now() - t0;
-    if (!res.ok) throw new Error((data && (data.detail || data.message)) ? (data.detail || data.message) : ("HTTP " + res.status));
-    return { data, dtMs };
-  }
-
-  // ---------------------------
-  // Canvas helpers
-  // ---------------------------
-  function setupCanvas(cv){
-    const dpr = window.devicePixelRatio || 1;
-    const cssW = cv.clientWidth;
-    const cssH = cv.clientHeight;
-    cv.width = Math.round(cssW * dpr);
-    cv.height = Math.round(cssH * dpr);
+  function setupHiDPICanvas(cv){
     const ctx = cv.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = cv.clientWidth || 600;
+    const cssH = cv.clientHeight || 300;
+    cv.width  = Math.round(cssW*dpr);
+    cv.height = Math.round(cssH*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,cssW,cssH);
     return {ctx, cssW, cssH};
   }
-
-  function makeTicks(minv, maxv, n=6){
-    if (!isFinite(minv) || !isFinite(maxv)) return [];
-    if (Math.abs(maxv-minv) < 1e-14) return [{val:minv, pos:0.5}];
-    const out = [];
-    for(let i=0;i<n;i++){
-      const a = i/(n-1);
-      out.push({ val:minv + a*(maxv-minv), pos:a });
+  function arcXY(r, th1, th2, N, includeEnds){
+    const pts = [];
+    if (N < 2) N = 2;
+    let th = includeEnds ? linspace(th1, th2, N) : linspace(th1, th2, N+2).slice(1,-1);
+    for (let i=0;i<th.length;i++){
+      const t = th[i];
+      pts.push([r*Math.sin(t), r*Math.cos(t)]);
     }
-    return out;
+    return pts;
   }
 
-  function drawGridAxes(ctx, rect, xticks, yticks, xFmt, yFmt, xlabel, ylabel, title){
-    const {x,y,w,h} = rect;
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,.06)";
-    ctx.lineWidth = 1;
-    for (const t of xticks){
-      const px = x + t.pos*w;
-      ctx.beginPath(); ctx.moveTo(px,y); ctx.lineTo(px,y+h); ctx.stroke();
-    }
-    for (const t of yticks){
-      const py = y + (1-t.pos)*h;
-      ctx.beginPath(); ctx.moveTo(x,py); ctx.lineTo(x+w,py); ctx.stroke();
-    }
-    ctx.restore();
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,.15)";
-    ctx.strokeRect(x,y,w,h);
-    ctx.restore();
-
-    ctx.save();
-    ctx.fillStyle = "rgba(255,255,255,.70)";
-    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    for (const t of xticks){
-      ctx.fillText(xFmt(t.val), x + t.pos*w, y+h+6);
-    }
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-    for (const t of yticks){
-      ctx.fillText(yFmt(t.val), x-8, y + (1-t.pos)*h);
-    }
-    ctx.restore();
-
-    if (title){
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,.88)";
-      ctx.font = "700 13px " + getComputedStyle(document.body).fontFamily;
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-      ctx.fillText(title, rect.x, 2);
-      ctx.restore();
-    }
-
-    if (xlabel){
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,.74)";
-      ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillText(xlabel, x+w/2, y+h+32);
-      ctx.restore();
-    }
-
-    if (ylabel){
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,.74)";
-      ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
-      ctx.translate(14, y+h/2);
-      ctx.rotate(-Math.PI/2);
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText(ylabel, 0, 0);
-      ctx.restore();
-    }
-  }
-
-  function drawLinePlot(cv, {
-    series = [],
-    title = "",
-    xlabel = "",
-    ylabel = "",
-    xDigits = 4,
-    yDigits = 4,
-    markers = [],
-    legend = [],
-    yPadFrac = 0.08
-  } = {}){
-    const {ctx, cssW, cssH} = setupCanvas(cv);
-
-    if (!series.length){
-      ctx.fillStyle = "rgba(255,255,255,.65)";
-      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
-      ctx.fillText("No data available.", 18, 28);
-      return;
-    }
-
-    let xmin=Infinity, xmax=-Infinity, ymin=Infinity, ymax=-Infinity;
-    for (const s of series){
-      for(let i=0;i<s.x.length;i++){
-        const x=s.x[i], y=s.y[i];
-        if (!isFinite(x) || !isFinite(y)) continue;
-        xmin = Math.min(xmin,x); xmax = Math.max(xmax,x);
-        ymin = Math.min(ymin,y); ymax = Math.max(ymax,y);
-      }
-    }
-    if (!isFinite(xmin) || !isFinite(ymin)) return;
-    if (Math.abs(xmax-xmin) < 1e-14){ xmin -= 1; xmax += 1; }
-    if (Math.abs(ymax-ymin) < 1e-14){ ymin -= 1; ymax += 1; }
-
-    const rect = { x:64, y:18, w: cssW-82, h: cssH-68 };
-    const padx = 0.04*(xmax-xmin);
-    const pady = yPadFrac*(ymax-ymin);
-    xmin -= padx; xmax += padx; ymin -= pady; ymax += pady;
-
-    const X = (x) => rect.x + (x-xmin)/(xmax-xmin) * rect.w;
-    const Y = (y) => rect.y + (1-(y-ymin)/(ymax-ymin)) * rect.h;
-
-    drawGridAxes(
-      ctx, rect,
-      makeTicks(xmin,xmax,6),
-      makeTicks(ymin,ymax,6),
-      (v)=>fmt(v,xDigits),
-      (v)=>fmt(v,yDigits),
-      xlabel, ylabel, title
-    );
-
-    // markers
-    for (const mk of markers || []){
-      if (!isFinite(mk.x)) continue;
-      const px = X(mk.x);
-      ctx.save();
-      ctx.strokeStyle = mk.color || "rgba(255,255,255,.22)";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([6,6]);
-      ctx.beginPath(); ctx.moveTo(px,rect.y); ctx.lineTo(px,rect.y+rect.h); ctx.stroke();
-      ctx.setLineDash([]);
-      if (mk.label){
-        ctx.fillStyle = "rgba(255,255,255,.72)";
-        ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
-        ctx.fillText(mk.label, px+4, rect.y+4);
-      }
-      ctx.restore();
-    }
-
-    // series
-    for (const s of series){
-      ctx.save();
-      ctx.strokeStyle = s.color || "rgba(122,162,255,.95)";
-      ctx.lineWidth = s.lineWidth || 2;
-      if (s.dashed) ctx.setLineDash([7,5]); else ctx.setLineDash([]);
-      ctx.beginPath();
-      let started = false;
-      for(let i=0;i<s.x.length;i++){
-        const xv=s.x[i], yv=s.y[i];
-        if (!isFinite(xv) || !isFinite(yv)){ started = false; continue; }
-        const px=X(xv), py=Y(yv);
-        if (!started){ ctx.moveTo(px,py); started = true; }
-        else ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // legend
-    if (legend && legend.length){
-      let lx = rect.x + 10, ly = rect.y + 10;
-      for (const item of legend){
-        ctx.save();
-        ctx.strokeStyle = item.color || "rgba(122,162,255,.95)";
-        ctx.lineWidth = 2;
-        if (item.dashed) ctx.setLineDash([7,5]); else ctx.setLineDash([]);
-        ctx.beginPath(); ctx.moveTo(lx,ly+7); ctx.lineTo(lx+24,ly+7); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = "rgba(255,255,255,.82)";
-        ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
-        ctx.fillText(item.label || "", lx+30, ly+2);
-        ctx.restore();
-        ly += 18;
-      }
-    }
-  }
-
-  function drawXYGeometry(cv, cfg){
-    const {ctx, cssW, cssH} = setupCanvas(cv);
-    const {series=[], circles=[], points=[], title=""} = cfg || {};
-
-    let xs=[], ys=[];
-    for (const s of series){
-      for(let i=0;i<s.x.length;i++){
-        const x=s.x[i], y=s.y[i];
-        if (isFinite(x)&&isFinite(y)){ xs.push(x); ys.push(y); }
-      }
-    }
-    for (const c of circles || []){
-      if (isFinite(c.cx) && isFinite(c.cy) && isFinite(c.r)){
-        xs.push(c.cx-c.r, c.cx+c.r); ys.push(c.cy-c.r, c.cy+c.r);
-      }
-    }
-    for (const p of points || []){
-      if (isFinite(p.x)&&isFinite(p.y)){ xs.push(p.x); ys.push(p.y); }
-    }
-
-    if (!xs.length){
-      ctx.fillStyle = "rgba(255,255,255,.65)";
-      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
-      ctx.fillText("No geometry data. Press Compute analytical pages.", 18, 28);
-      return;
-    }
-
-    let xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
-    const w0 = Math.max(1e-9, xmax-xmin), h0 = Math.max(1e-9, ymax-ymin);
-    xmin -= 0.10*w0; xmax += 0.10*w0; ymin -= 0.10*h0; ymax += 0.10*h0;
-
-    const rect = {x:16,y:16,w:cssW-32,h:cssH-32};
-    const sx = rect.w/Math.max(1e-9,xmax-xmin);
-    const sy = rect.h/Math.max(1e-9,ymax-ymin);
-    const s = Math.min(sx, sy);
-
-    const mx = 0.5*(xmin+xmax), my = 0.5*(ymin+ymax);
-    const cx = rect.x + rect.w/2, cy = rect.y + rect.h/2;
-    const X = (x) => cx + (x-mx)*s;
-    const Y = (y) => cy - (y-my)*s;
-
-    // frame + axes
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,.12)";
-    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
-    ctx.strokeStyle = "rgba(255,255,255,.06)";
-    ctx.beginPath(); ctx.moveTo(rect.x, Y(0)); ctx.lineTo(rect.x+rect.w, Y(0)); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(X(0), rect.y); ctx.lineTo(X(0), rect.y+rect.h); ctx.stroke();
-    ctx.restore();
-
-    // circles
-    for (const c of circles || []){
-      ctx.save();
-      ctx.strokeStyle = c.color || "rgba(255,255,255,.20)";
-      ctx.lineWidth = c.lineWidth || 1;
-      if (c.dashed) ctx.setLineDash([6,6]); else ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.arc(X(c.cx), Y(c.cy), Math.max(0, c.r*s), 0, 2*Math.PI);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // series
-    for (const srs of series){
-      ctx.save();
-      ctx.strokeStyle = srs.color || "rgba(122,162,255,.95)";
-      ctx.lineWidth = srs.lineWidth || 2;
-      if (srs.dashed) ctx.setLineDash([7,5]); else ctx.setLineDash([]);
-      ctx.beginPath();
-      let started = false;
-      for(let i=0;i<srs.x.length;i++){
-        const x=srs.x[i], y=srs.y[i];
-        if (!isFinite(x)||!isFinite(y)){ started=false; continue; }
-        const px=X(x), py=Y(y);
-        if (!started){ ctx.moveTo(px,py); started=true; }
-        else ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // points
-    for (const p of points || []){
-      ctx.save();
-      ctx.fillStyle = p.color || "#fff";
-      ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 4, 0, 2*Math.PI); ctx.fill();
-      if (p.label){
-        ctx.fillStyle = "rgba(255,255,255,.85)";
-        ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
-        ctx.fillText(p.label, X(p.x)+6, Y(p.y)-6);
-      }
-      ctx.restore();
-    }
-
-    // title/legend
-    if (title){
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,.82)";
-      ctx.font = "700 13px " + getComputedStyle(document.body).fontFamily;
-      ctx.fillText(title, 24, 24);
-      ctx.restore();
-    }
-  }
-
-  // ---------------------------
-  // Core gear computations
-  // (analytical / involute baseline demo)
-  // ---------------------------
-  function computeInvoluteBundle({m,z1,z2,alphaDeg,Ck,Cf,N}){
-    const alpha = deg2rad(alphaDeg);
-    if (!(m>0)) throw new Error("m must be > 0");
-    if (!(z1>=3 && Number.isInteger(z1))) throw new Error("z1 must be integer >= 3");
-    if (!(z2>=3 && Number.isInteger(z2))) throw new Error("z2 must be integer >= 3");
-    if (!(alpha>0 && alpha<Math.PI/2)) throw new Error("alpha must be in (0,90) deg");
-    if (!(Ck>0 && Cf>0)) throw new Error("Ck and Cf must be > 0");
-    if (!(N>=200)) throw new Error("N must be >= 200");
+  function computeInvoluteLOAandProfile({ m, z1, z2, alphaRad, Ck, Cf, N }){
+    if (!(m>0)) throw new Error("Module m must be > 0.");
+    if (!(z1>=3 && Number.isInteger(z1))) throw new Error("z1 must be integer ≥ 3.");
+    if (!(z2>=3 && Number.isInteger(z2))) throw new Error("z2 must be integer ≥ 3.");
+    if (!(alphaRad>0 && alphaRad<Math.PI/2)) throw new Error("Pressure angle must be in (0, 90°).");
+    if (!(Ck>0 && Cf>0)) throw new Error("Ck and Cf must be > 0.");
+    if (!(N>=200 && Number.isFinite(N))) throw new Error("Sampling points N must be ≥ 200.");
 
     const ro1 = z1*m/2;
     const ro2 = z2*m/2;
-    const rb1 = ro1*Math.cos(alpha);
-    const rb2 = ro2*Math.cos(alpha);
-    const ra1 = ro1 + Ck*m;
-    const ra2 = ro2 + Ck*m;
-    const rf1 = ro1 - Cf*m;
-    const rf2 = ro2 - Cf*m;
+    const rb1 = ro1*Math.cos(alphaRad);
+    const rb2 = ro2*Math.cos(alphaRad);
 
-    // rack line for involute generation (baseline)
+    const hk = Ck*m;
+    const hf = Cf*m;
+    const ra1 = ro1 + hk;
+    const ra2 = ro2 + hk;
+    const rf1 = ro1 - hf;
+    const rf2 = ro2 - hf;
+
     const yr = linspace(-Cf*m, Ck*m, N);
-    const xr = yr.map(v => -Math.tan(alpha)*v);
-    const dydx = yr.map(() => -1/Math.tan(alpha));
+    const xr = yr.map(v => -Math.tan(alphaRad)*v);
+    const dydx = yr.map(() => -1/Math.tan(alphaRad));
 
     const K = yr.map((y,i) => -(y*dydx[i] + xr[i]));
-    const theta = K.map(k => k/ro1);
+    const theta = K.map(k => k / ro1);
 
     const xcp = xr.map((x,i) => x + K[i]);
     const ycp = yr.slice();
 
-    // working LOA mask inside both addendum circles
     const mask = xcp.map((x,i) => {
       const y = ycp[i];
       const rA1 = Math.hypot(x, y + ro1);
@@ -971,69 +776,64 @@
       return (rA1 <= ra1) && (rA2 <= ra2);
     });
 
-    // longest contiguous run
-    let runs = [];
-    let inRun = false, s0 = 0;
-    for(let i=0;i<mask.length;i++){
-      if (!inRun && mask[i]){ inRun = true; s0 = i; }
+    const runs = [];
+    let inRun = false, s = 0;
+    for (let i=0;i<mask.length;i++){
+      if (!inRun && mask[i]){ inRun = true; s = i; }
       if (inRun && (!mask[i] || i === mask.length-1)){
-        const e0 = (mask[i] && i===mask.length-1) ? i : i-1;
-        runs.push([s0,e0]);
+        const e = (mask[i] && i===mask.length-1) ? i : i-1;
+        runs.push([s,e]);
         inRun = false;
       }
     }
-    if (!runs.length) throw new Error("LOA extraction failed (no points inside both addendum circles)");
+    if (runs.length === 0) throw new Error("LOA extraction failed.");
 
-    let best=runs[0], bestL=-Infinity;
+    let best = runs[0], bestLen = -1;
     for (const [a,b] of runs){
-      let L=0;
-      for(let k=a;k<b;k++) L += Math.hypot(xcp[k+1]-xcp[k], ycp[k+1]-ycp[k]);
-      if (L > bestL){ bestL=L; best=[a,b]; }
+      let L = 0;
+      for (let k=a;k<b;k++){
+        L += Math.hypot(xcp[k+1]-xcp[k], ycp[k+1]-ycp[k]);
+      }
+      if (L > bestLen){ bestLen = L; best = [a,b]; }
     }
+
     const [i0,i1] = best;
+    const xLOA = xcp.slice(i0, i1+1);
+    const yLOA = ycp.slice(i0, i1+1);
+    const thLOA = theta.slice(i0, i1+1);
+    const KLOA  = K.slice(i0, i1+1);
 
-    const xLOA = xcp.slice(i0,i1+1);
-    const yLOA = ycp.slice(i0,i1+1);
-    const thLOA = theta.slice(i0,i1+1);
-    const KLOA = K.slice(i0,i1+1);
-
-    // working profile in pitch-point frame
     const xPP = new Array(xLOA.length);
-    const yPP = new Array(xLOA.length);
+    const yPP = new Array(yLOA.length);
     for (let i=0;i<xLOA.length;i++){
       const x = xLOA[i], y = yLOA[i], th = thLOA[i];
-      xPP[i] = x*Math.cos(th) - (y+ro1)*Math.sin(th);
-      yPP[i] = x*Math.sin(th) + (y+ro1)*Math.cos(th) - ro1;
+      xPP[i] =  x*Math.cos(th) - (y + ro1)*Math.sin(th);
+      yPP[i] =  x*Math.sin(th) + (y + ro1)*Math.cos(th) - ro1;
     }
 
-    const pb = Math.PI*m*Math.cos(alpha);
-    const eps = bestL / pb;
+    const loaLen = bestLen;
+    const pb = Math.PI*m*Math.cos(alphaRad);
+    const eps = loaLen / pb;
 
     return {
-      m,z1,z2,alphaDeg,alpha,Ck,Cf,N,
-      ro1,ro2,rb1,rb2,ra1,ra2,rf1,rf2,
-      xr,yr,K,theta,xcp,ycp,mask,
-      xLOA,yLOA,thLOA,KLOA,
-      xPP,yPP,
-      loaLen: bestL,
-      pb, eps
+      m, z1, z2, alphaRad, Ck, Cf,
+      ro1, ro2, rb1, rb2, ra1, ra2, rf1, rf2,
+      xLOA, yLOA, thLOA, KLOA,
+      xrLOA: xLOA.map((x,i)=> x - KLOA[i]),
+      yrLOA: yLOA.slice(),
+      xPP, yPP,
+      loaLen, pb, eps
     };
   }
 
   function computeContactMetrics(base){
     const theta_pinion_LOA = base.thLOA.slice();
-    const theta_gear_LOA = theta_pinion_LOA.map(t => -(base.ro1/base.ro2)*t);
-
-    const dist2P = base.xLOA.map((x,i) => x*x + base.yLOA[i]*base.yLOA[i]);
+    const theta_gear_LOA   = theta_pinion_LOA.map(t => -(base.ro1/base.ro2)*t);
+    const dist2P = base.xLOA.map((x,i)=> x*x + base.yLOA[i]*base.yLOA[i]);
     const idxP = argmin(dist2P);
 
-    const B = [base.xLOA[0], base.yLOA[0]];
-    const P = [base.xLOA[idxP], base.yLOA[idxP]];
-    const C = [base.xLOA[base.xLOA.length-1], base.yLOA[base.yLOA.length-1]];
-
-    const theta_B = theta_pinion_LOA[0];
-    const theta_P = theta_pinion_LOA[idxP];
-    const theta_C = theta_pinion_LOA[theta_pinion_LOA.length-1];
+    const theta_B  = theta_pinion_LOA[0];
+    const theta_P  = theta_pinion_LOA[idxP];
     const theta2_P = theta_gear_LOA[idxP];
     const theta2_C = theta_gear_LOA[theta_gear_LOA.length-1];
 
@@ -1041,1146 +841,1248 @@
     const arc_GEAR2 = base.ro2 * Math.abs(theta2_C - theta2_P);
     const ea = arc_GEAR1 + arc_GEAR2;
 
-    const t0 = Math.PI*base.m;
-    const tg = t0*Math.cos(base.alpha);
-    const eps_LOA = base.loaLen / tg;
+    const t0 = Math.PI * base.m;
+    const tg = t0 * Math.cos(base.alphaRad);
+
+    const eps_LOA  = base.loaLen / tg;
     const eps_arcs = ea / t0;
 
     const s_LOA = cumulativeArcLength(base.xLOA, base.yLOA);
-    const s_from_pitch = s_LOA.map(v => v - s_LOA[idxP]);
+
+    return { idxP, L_LOA: base.loaLen, eps_LOA, eps_arcs, s_LOA };
+  }
+
+  function eval_rc_from_dy(dy_try, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy){
+    const yrl = y_end0 - dy_try;
+    const xrl = x_end0 + slope_dxdy*(yrl - y_end0);
+    const phir = phir0;
+
+    let rc = (yrl + Math.tan(phir)*xrl + Cf*m - Math.tan(phir)*(K0 - delta0/2)) /
+             (1 - Math.cos(phir) - Math.tan(phir)*Math.sin(phir));
+
+    const yrend = rc*(1 - Math.cos(phir)) - Cf*m;
+    if (yrend > yrl) rc = (yrl + Cf*m) / (1 - Math.cos(phir));
+
+    const xtest = (-Cf*m - yrl - Math.tan(phir)*xrl) / (-Math.tan(phir));
+    const useLowerLine = (xtest > K0);
+
+    if (useLowerLine){
+      const yrpr = yrl - offset*m;
+      const xrpr = (yrpr - yrl - Math.tan(phir)*xrl) / (-Math.tan(phir));
+      rc = (yrpr + Math.tan(phir_new)*xrpr + Cf*m - Math.tan(phir_new)*(K0 - delta0/2)) /
+           (1 - Math.cos(phir_new) - Math.tan(phir_new)*Math.sin(phir_new));
+    }
+    return rc;
+  }
+
+  function rack_fillet_v2(m, Z, xr_in, yr_in, Cf, cdel, rc_target, phir_new, offset){
+    let xr = xr_in.slice();
+    let yr = yr_in.slice();
+    if (xr.length !== yr.length || xr.length < 2) throw new Error("rack_fillet: invalid input.");
+    if (yr[yr.length-1] > yr[0]){ xr.reverse(); yr.reverse(); }
+
+    const dx_last = xr[xr.length-1] - xr[xr.length-2];
+    const dy_last = yr[yr.length-1] - yr[yr.length-2];
+    if (Math.abs(dy_last) < 1e-12) throw new Error("rack_fillet: dy≈0.");
+
+    const slope_dxdy = dx_last / dy_last;
+    const x_end0 = xr[xr.length-1];
+    const y_end0 = yr[yr.length-1];
+
+    const ro = m*Z/2;
+    const theta_rack_0 = 0.495*Math.PI/Z;
+    const K0 = theta_rack_0*ro + 0.495*Math.PI*m/2;
+    const delta0 = cdel*m;
+
+    const arack_end0 = (yr[yr.length-2] - yr[yr.length-1]) / (xr[yr.length-2] - xr[yr.length-1]);
+    const phir0 = Math.atan(-arack_end0);
+
+    let dy_ext = 0;
+    if (!(isFinite(rc_target) && rc_target > 0)){
+      dy_ext = 0.15*m;
+    } else {
+      const tol_rc = 1e-6*Math.max(1, Math.abs(rc_target));
+      const max_iter = 45;
+
+      let dy_lo = 0.0;
+      let f_lo = eval_rc_from_dy(dy_lo, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy) - rc_target;
+
+      let dy_hi = 0.15*m;
+      let f_hi = eval_rc_from_dy(dy_hi, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy) - rc_target;
+
+      const dy_hi_max = 20*m;
+      let k_expand = 0;
+      while ((f_lo*f_hi > 0) && (dy_hi < dy_hi_max) && (k_expand < 30)){
+        dy_hi = Math.min(dy_hi*1.6 + 1e-6, dy_hi_max);
+        f_hi = eval_rc_from_dy(dy_hi, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy) - rc_target;
+        k_expand++;
+      }
+
+      if (f_lo*f_hi <= 0){
+        for (let it=0; it<max_iter; it++){
+          const dy_mid = 0.5*(dy_lo + dy_hi);
+          const f_mid = eval_rc_from_dy(dy_mid, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy) - rc_target;
+          if (Math.abs(f_mid) < tol_rc || Math.abs(dy_hi-dy_lo) < 1e-10){ dy_ext = dy_mid; break; }
+          if (f_lo*f_mid <= 0) dy_hi = dy_mid;
+          else { dy_lo = dy_mid; f_lo = f_mid; }
+          dy_ext = dy_mid;
+        }
+      } else {
+        dy_ext = 0.15*m;
+      }
+    }
+
+    if (dy_ext > 1e-12){
+      const y_end1 = y_end0 - dy_ext;
+      const stepext = 1.5e-3;
+      const Next = Math.max(5, Math.ceil(Math.abs(y_end1 - y_end0)/stepext));
+      const y_ext = linspace(y_end0, y_end1, Next+1).slice(1);
+      const x_ext = y_ext.map(yv => xr[xr.length-1] + slope_dxdy*(yv - y_end0));
+      xr = xr.concat(x_ext);
+      yr = yr.concat(y_ext);
+    }
+
+    const arack_end = (yr[yr.length-2] - yr[yr.length-1]) / (xr[yr.length-2] - xr[yr.length-1]);
+    let phir = Math.atan(-arack_end);
+
+    const xrlptc = xr[xr.length-1];
+    const yrlptc = yr[yr.length-1];
+
+    let delta = cdel*m;
+    let rc = (yrlptc + Math.tan(phir)*xrlptc + Cf*m - Math.tan(phir)*(K0 - delta/2)) /
+             (1 - Math.cos(phir) - Math.tan(phir)*Math.sin(phir));
+
+    let yrc0 = -Cf*m + rc;
+    let xrc0 = K0 - delta/2;
+
+    let xrend = -rc*Math.sin(phir) + xrc0;
+    let yrend =  rc*(1 - Math.cos(phir)) - Cf*m;
+
+    if (yrend > yrlptc){
+      yrend = yrlptc;
+      xrend = xrlptc;
+      rc = (yrlptc + Cf*m) / (1 - Math.cos(phir));
+      delta = 2*(K0 - xrlptc - rc*Math.sin(phir));
+      yrc0 = -Cf*m + rc;
+      xrc0 = K0 - delta/2;
+    }
+
+    const xtest = (-Cf*m - yrlptc - Math.tan(phir)*xrlptc) / (-Math.tan(phir));
+    const useLowerLine = (xtest > K0);
+
+    let xrpr=NaN, yrpr=NaN;
+    let phiArc = phir;
+
+    if (useLowerLine){
+      yrpr = yrlptc - offset*m;
+      xrpr = (yrpr - yrlptc - Math.tan(phir)*xrlptc) / (-Math.tan(phir));
+
+      rc = (yrpr + Math.tan(phir_new)*xrpr + Cf*m - Math.tan(phir_new)*(K0 - delta/2)) /
+           (1 - Math.cos(phir_new) - Math.tan(phir_new)*Math.sin(phir_new));
+
+      yrc0 = -Cf*m + rc;
+      xrc0 = K0 - delta/2;
+
+      xrend = -rc*Math.sin(phir_new) + xrc0;
+      yrend =  rc*(1 - Math.cos(phir_new)) - Cf*m;
+      phiArc = phir_new;
+    }
+
+    let xr_lin = [], yr_lin = [], dydx_lin = [];
+    let steplin = 1.5e-3;
+    if (Math.abs(yrlptc - yrend) < steplin) steplin = Math.abs(yrlptc - yrend)/5 + 1e-12;
+
+    if (!useLowerLine){
+      const ylin = [];
+      for (let yv=yrlptc; yv>=yrend; yv-=steplin) ylin.push(yv);
+      if (ylin.length===0 || ylin[ylin.length-1] !== yrend) ylin.push(yrend);
+
+      const xlin = ylin.map(yv => (yv - (yrlptc + Math.tan(phir)*xrlptc)) / (-Math.tan(phir)));
+      xr_lin = xlin;
+      yr_lin = ylin;
+      dydx_lin = ylin.map(() => -Math.tan(phir));
+    } else {
+      const ylin1 = [];
+      for (let yv=yrlptc; yv>=yrpr; yv-=steplin) ylin1.push(yv);
+      if (ylin1.length===0 || ylin1[ylin1.length-1] !== yrpr) ylin1.push(yrpr);
+      const xlin1 = ylin1.map(yv => (yv - (yrlptc + Math.tan(phir)*xrlptc)) / (-Math.tan(phir)));
+
+      let steplin2 = steplin;
+      if (Math.abs(yrpr - yrend) < steplin2) steplin2 = Math.abs(yrpr - yrend)/5 + 1e-12;
+      const ylin2 = [];
+      for (let yv=yrpr; yv>=yrend; yv-=steplin2) ylin2.push(yv);
+      if (ylin2.length===0 || ylin2[ylin2.length-1] !== yrend) ylin2.push(yrend);
+      const xlin2 = ylin2.map(yv => (yv - (yrpr + Math.tan(phir_new)*xrpr)) / (-Math.tan(phir_new)));
+
+      xr_lin = xlin1.concat(xlin2.slice(1));
+      yr_lin = ylin1.concat(ylin2.slice(1));
+      dydx_lin = ylin1.map(() => -Math.tan(phir)).concat(ylin2.slice(1).map(() => -Math.tan(phir_new)));
+    }
+
+    const dphi = deg2rad(0.5);
+    const thrc = [];
+    for (let t=phiArc; t>=0; t-=dphi) thrc.push(t);
+    if (thrc.length===0 || thrc[thrc.length-1] !== 0) thrc.push(0);
+
+    const xr_rc = thrc.map(t => -rc*Math.sin(t) + xrc0);
+    const yr_rc = thrc.map(t => -rc*Math.cos(t) + yrc0);
+    const dydx_rc = thrc.map(t => -Math.tan(t));
+
+    const xr_tr = xr_lin.concat(xr_rc);
+    const yr_tr = yr_lin.concat(yr_rc);
+    const dydx_tr = dydx_lin.concat(dydx_rc);
+
+    const x_pin_tr = new Array(xr_tr.length);
+    const y_pin_tr = new Array(xr_tr.length);
+
+    for (let i=0;i<xr_tr.length;i++){
+      const K_tr = -(yr_tr[i]*dydx_tr[i] + xr_tr[i]);
+      const th = K_tr / ro;
+      x_pin_tr[i] = (xr_tr[i] + K_tr)*Math.cos(th) - (yr_tr[i] + ro)*Math.sin(th);
+      y_pin_tr[i] = (xr_tr[i] + K_tr)*Math.sin(th) + (yr_tr[i] + ro)*Math.cos(th);
+    }
+
+    return { x_pin_tr, y_pin_tr };
+  }
+
+  function snapEndToStart(A, B, tol){
+    if (!A || !B || A.length===0 || B.length===0) return [A,B];
+    const pA = A[A.length-1];
+    const pB = B[0];
+    const gap = Math.hypot(pA[0]-pB[0], pA[1]-pB[1]);
+    if (gap <= tol){
+      const p = [0.5*(pA[0]+pB[0]), 0.5*(pA[1]+pB[1])];
+      A[A.length-1] = p;
+      B[0] = p;
+    }
+    return [A,B];
+  }
+  function dedupeConsecutive(P){
+    if (!P || P.length<2) return P;
+    const out = [P[0]];
+    for (let i=1;i<P.length;i++){
+      const a = out[out.length-1], b = P[i];
+      if (a[0] !== b[0] || a[1] !== b[1]) out.push(b);
+    }
+    return out;
+  }
+  function prepend_connector_if_needed(x_in, y_in, xtr_in, ytr_in, Nbridge=25){
+    if (!x_in.length || !xtr_in.length) return {xtr:xtr_in, ytr:ytr_in};
+    const p_end = [x_in[x_in.length-1], y_in[y_in.length-1]];
+    const p0 = [xtr_in[0], ytr_in[0]];
+    const d = Math.hypot(p_end[0]-p0[0], p_end[1]-p0[1]);
+    if (d < 1e-9) return {xtr:xtr_in, ytr:ytr_in};
+
+    Nbridge = Math.max(5, Math.round(Nbridge));
+    const xb = linspace(p_end[0], p0[0], Nbridge);
+    const yb = linspace(p_end[1], p0[1], Nbridge);
 
     return {
-      theta_pinion_LOA, theta_gear_LOA,
-      idxP, B,P,C,
-      L_LOA: base.loaLen, p_b: base.pb, t0,tg,
-      arc_GEAR1, arc_GEAR2, ea,
-      eps_LOA, eps_arcs,
-      s_LOA, s_from_pitch
+      xtr: xb.slice(0,-1).concat(xtr_in),
+      ytr: yb.slice(0,-1).concat(ytr_in)
     };
   }
 
-  function loadSharingApprox({base, contact, rpm, torque}){
-    const module = base.m;
-    const pressure_angle = base.alpha;
-    const z1 = base.z1;
-    const ro_2 = base.ro2;
-    const Ck = base.Ck;
-    const epsilon_alpha = contact.eps_LOA;
-    const a_w = (base.z1 + base.z2)*base.m/2;
-    const theta_LOA = contact.theta_pinion_LOA;
+  function gear_generator(x, y, x_tr, y_tr, Z){
+    if (x.length < 2 || y.length < 2 || x.length !== y.length) throw new Error("gear_generator: invalid x,y.");
+    if (x_tr.length < 2 || y_tr.length < 2 || x_tr.length !== y_tr.length) throw new Error("gear_generator: invalid x_tr,y_tr.");
+    if (!(Z>=3 && Number.isInteger(Z))) throw new Error("Z must be integer >=3.");
 
-    const p_b = Math.PI * module * Math.cos(pressure_angle);
-    const ra2 = ro_2 + Ck * module;
-    const rb2 = ro_2 * Math.cos(pressure_angle);
+    const r_in = x.map((vx,i)=> Math.hypot(vx,y[i]));
+    if (r_in[0] < r_in[r_in.length-1]){ x = x.slice().reverse(); y = y.slice().reverse(); }
+    const r_tr = x_tr.map((vx,i)=> Math.hypot(vx,y_tr[i]));
+    if (r_tr[r_tr.length-1] > r_tr[0]){ x_tr = x_tr.slice().reverse(); y_tr = y_tr.slice().reverse(); }
 
-    const psi_A = a_w * Math.sin(pressure_angle) - Math.sqrt(Math.max(ra2*ra2 - rb2*rb2, 0));
-    const delta_pb = Math.PI * p_b / z1;
+    const th_tip_R = Math.atan2(x[0], y[0]);
+    const th_tip_L = Math.atan2(-x[0], y[0]);
+    const rA = Math.hypot(x[0], y[0]);
 
-    let psi_B = NaN, psi_D = NaN, psi_E = NaN;
-    const psi = [], R_M = [];
+    const th_pin_div_k = 40;
+    const th_k = linspace(th_tip_L, th_tip_R, th_pin_div_k+1);
+    const xk = th_k.slice(1,-1).map(t => rA*Math.sin(t));
+    const yk = th_k.slice(1,-1).map(t => rA*Math.cos(t));
 
-    if (epsilon_alpha <= 1 + 1e-9){
-      psi_E = psi_A + Math.max(epsilon_alpha,1e-6)*delta_pb;
-      const psiGrid = linspace(psi_A, psi_E, theta_LOA.length);
-      for (const p of psiGrid){ psi.push(p); R_M.push(1.0); }
+    const rF = Math.hypot(x_tr[x_tr.length-1], y_tr[y_tr.length-1]);
+    const th_root_R = Math.atan2(x_tr[x_tr.length-1], y_tr[y_tr.length-1]);
+    const th_root_L = Math.atan2(-x_tr[x_tr.length-1], y_tr[y_tr.length-1]);
+    const th_root_L_next = th_root_L + 2*Math.PI/Z;
+
+    const th_div_f = 20;
+    const th_f = linspace(th_root_R, th_root_L_next, th_div_f+1);
+    const xf = th_f.slice(1,-1).map(t => rF*Math.sin(t));
+    const yf = th_f.slice(1,-1).map(t => rF*Math.cos(t));
+
+    const x_tooth_legacy = [];
+    const y_tooth_legacy = [];
+    for (let i=x_tr.length-1;i>=0;i--){ x_tooth_legacy.push(-x_tr[i]); y_tooth_legacy.push(y_tr[i]); }
+    for (let i=x.length-1;i>=0;i--){ x_tooth_legacy.push(-x[i]); y_tooth_legacy.push(y[i]); }
+    for (let i=0;i<xk.length;i++){ x_tooth_legacy.push(xk[i]); y_tooth_legacy.push(yk[i]); }
+    for (let i=0;i<x.length;i++){ x_tooth_legacy.push(x[i]); y_tooth_legacy.push(y[i]); }
+    for (let i=0;i<x_tr.length;i++){ x_tooth_legacy.push(x_tr[i]); y_tooth_legacy.push(y_tr[i]); }
+    for (let i=0;i<xf.length;i++){ x_tooth_legacy.push(xf[i]); y_tooth_legacy.push(yf[i]); }
+
+    const Ntooth = x_tooth_legacy.length;
+    const x_tot = new Array(Z*Ntooth + 1);
+    const y_tot = new Array(Z*Ntooth + 1);
+
+    for (let k=1;k<=Z;k++){
+      const rot = -(k-1)*2*Math.PI/Z;
+      const c = Math.cos(rot), s = Math.sin(rot);
+      const istart = (k-1)*Ntooth;
+      for (let i=0;i<Ntooth;i++){
+        const xx = x_tooth_legacy[i], yy = y_tooth_legacy[i];
+        x_tot[istart+i] = xx*c - yy*s;
+        y_tot[istart+i] = xx*s + yy*c;
+      }
+    }
+    x_tot[x_tot.length-1] = x_tot[0];
+    y_tot[y_tot.length-1] = y_tot[0];
+
+    const thetaB_L = -Math.PI/Z;
+    const thetaB_R =  Math.PI/Z;
+
+    const th_tip_L2  = Math.atan2(-x[0], y[0]);
+    const th_tip_R2  = Math.atan2( x[0], y[0]);
+    const th_root_R2 = Math.atan2( x_tr[x_tr.length-1], y_tr[y_tr.length-1]);
+
+    const NrootSeg = 40;
+    const NaddSeg  = 80;
+
+    let seg = {};
+    seg.rootL = arcXY(rF, thetaB_L, Math.atan2(-x_tr[x_tr.length-1], y_tr[y_tr.length-1]), NrootSeg, true);
+    seg.troL  = x_tr.slice().reverse().map((vx,i)=> [-vx, y_tr[y_tr.length-1-i]]);
+    seg.invL  = x.slice().reverse().map((vx,i)=> [-vx, y[y.length-1-i]]);
+    seg.add   = arcXY(rA, th_tip_L2, th_tip_R2, NaddSeg, true);
+    seg.invR  = x.map((vx,i)=> [vx, y[i]]);
+    seg.troR  = x_tr.map((vx,i)=> [vx, y_tr[i]]);
+    seg.rootR = arcXY(rF, th_root_R2, thetaB_R, NrootSeg, true);
+
+    const tolSnap = Math.max(1e-6, 1e-3*Math.max(1, rA));
+    [seg.rootL, seg.troL ] = snapEndToStart(seg.rootL, seg.troL,  tolSnap);
+    [seg.troL,  seg.invL ] = snapEndToStart(seg.troL,  seg.invL,  tolSnap);
+    [seg.invL,  seg.add  ] = snapEndToStart(seg.invL,  seg.add,   tolSnap);
+    [seg.add,   seg.invR ] = snapEndToStart(seg.add,   seg.invR,  tolSnap);
+    [seg.invR,  seg.troR ] = snapEndToStart(seg.invR,  seg.troR,  tolSnap);
+    [seg.troR,  seg.rootR] = snapEndToStart(seg.troR,  seg.rootR, tolSnap);
+
+    for (const k of ["rootL","troL","invL","add","invR","troR","rootR"]){
+      seg[k] = dedupeConsecutive(seg[k]);
+    }
+
+    return { x_tot, y_tot, seg };
+  }
+
+  function mapRackFlankToGear(xr, yr, alphaRad, ro){
+    const dydx = -1/Math.tan(alphaRad);
+    const xg = new Array(xr.length);
+    const yg = new Array(xr.length);
+    for (let i=0;i<xr.length;i++){
+      const K = -(yr[i]*dydx + xr[i]);
+      const th = K / ro;
+      xg[i] = (xr[i] + K)*Math.cos(th) - (yr[i] + ro)*Math.sin(th);
+      yg[i] = (xr[i] + K)*Math.sin(th) + (yr[i] + ro)*Math.cos(th);
+    }
+    return {x:xg, y:yg};
+  }
+
+  function drawToothCanvas(cv, base, tooth, full, opts){
+    const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
+
+    if (!base || !tooth){
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillText("—", 18, 28);
+      ctx.restore();
+      return;
+    }
+
+    const showFull = ui.showGear.checked && !!full;
+    const showLOA = ui.showLOA.checked && !!opts?.loa && !!opts?.isPinion;
+
+    const pts = [];
+    if (showFull){
+      for (let i=0;i<full.x_tot.length;i++) pts.push([full.x_tot[i], full.y_tot[i]]);
     } else {
-      psi_B = psi_A + (epsilon_alpha - 1)*delta_pb;
-      psi_D = psi_A + delta_pb;
-      psi_E = psi_A + epsilon_alpha*delta_pb;
-      const psiGrid = linspace(psi_A, psi_E, theta_LOA.length);
-      for (const p of psiGrid){
-        let rm;
-        if (p <= psi_B){
-          rm = 0.36 + (0.28/(epsilon_alpha-1))*(z1/(Math.PI*p_b))*(p-psi_A);
-        } else if (p <= psi_D){
-          rm = 1.0;
-        } else {
-          rm = 0.36 - (0.28/(epsilon_alpha-1))*(((z1/(Math.PI*p_b))*(p-psi_A))-epsilon_alpha);
-        }
-        psi.push(p); R_M.push(rm);
+      for (let i=0;i<tooth.x_tooth.length;i++) pts.push([tooth.x_tooth[i], tooth.y_tooth[i]]);
+    }
+
+    let xmin=+Infinity, xmax=-Infinity, ymin=+Infinity, ymax=-Infinity;
+    for (const [x,y] of pts){
+      xmin = Math.min(xmin,x); xmax = Math.max(xmax,x);
+      ymin = Math.min(ymin,y); ymax = Math.max(ymax,y);
+    }
+    if (showLOA){
+      const xL = opts.loa.x, yL = opts.loa.y;
+      for (let i=0;i<xL.length;i++){
+        xmin = Math.min(xmin, xL[i]); xmax = Math.max(xmax, xL[i]);
+        ymin = Math.min(ymin, yL[i]); ymax = Math.max(ymax, yL[i]);
       }
     }
 
-    const ro_1_m = base.ro1*1e-3;
-    const F_t = torque / ro_1_m;
-    const F_n = F_t / Math.cos(pressure_angle);
-    const F_n_shared = R_M.map(v => F_n * v);
+    const w = Math.max(1e-9, xmax-xmin), h = Math.max(1e-9, ymax-ymin);
+    const pad = 16;
+    const s = Math.min((cssW-2*pad)/w, (cssH-2*pad)/h);
 
-    const theta_A = interpLinear(psi, theta_LOA, psi_A);
-    const theta_B = Number.isFinite(psi_B) ? interpLinear(psi, theta_LOA, psi_B) : NaN;
-    const theta_D = Number.isFinite(psi_D) ? interpLinear(psi, theta_LOA, psi_D) : NaN;
-    const theta_E = interpLinear(psi, theta_LOA, psi_E);
+    const cx = pad + (cssW-2*pad)/2;
+    const cy = pad + (cssH-2*pad)/2;
+    const mx = 0.5*(xmin+xmax);
+    const my = 0.5*(ymin+ymax);
 
-    const omega1 = rpm * (2*Math.PI/60);
-    const omega2 = -omega1 * (base.ro1/base.ro2);
-    const P_in = omega1 * torque;
+    function X(x){ return cx + (x-mx)*s; }
+    function Y(y){ return cy - (y-my)*s; }
 
-    return { psi, R_M, F_t, F_n, F_n_shared, psi_A, psi_B, psi_D, psi_E, theta_A, theta_B, theta_D, theta_E, omega1, omega2, P_in };
-  }
-
-  // ---------------------------
-  // Modular page registry
-  // ---------------------------
-  const pages = [];
-  const pageMap = new Map();
-  const refs = {};
-
-  function registerPage(def){
-    if (!def?.id) throw new Error("Page must have id");
-    if (pageMap.has(def.id)) throw new Error("Duplicate page id: " + def.id);
-    pages.push(def);
-    pageMap.set(def.id, def);
-  }
-  function setRefs(pageId, r){ refs[pageId] = r || {}; }
-
-  registerPage({
-    id: "pageGeom",
-    navIcon: "🧩", navLabel: "Geometry", navSmall: "LOA",
-    title: "Geometry Preview",
-    desc: "Raw contact path, extracted working LOA, working pinion profile (pitch-point frame) and reference circles.",
-    template: () => `
-      <div class="badgeRow">
-        <div class="badge">ε<sub>α</sub> (LOA): <strong id="g_eps">—</strong></div>
-        <div class="badge">L<sub>LOA</sub>: <strong id="g_loa">—</strong></div>
-        <div class="badge">p<sub>b</sub>: <strong id="g_pb">—</strong></div>
-      </div>
-
-      <div class="split2">
-        <section class="card">
-          <div class="head">
-            <h2>Contact path / LOA (pitch-point frame)</h2>
-            <div class="row">
-              <button class="btn good" id="g_exportLOA">Export LOA CSV</button>
-              <button class="btn" id="g_exportCP">Export raw CP CSV</button>
-            </div>
-          </div>
-          <div class="canvasWrap">
-            <canvas id="g_cv1" class="h420"></canvas>
-            <div class="smallnote">Gray = raw contact path (CP), green = extracted working LOA. Markers B–P–C shown after compute.</div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="head">
-            <h2>Working pinion profile (pitch-point frame)</h2>
-            <div class="row">
-              <button class="btn good" id="g_exportProfile">Export profile CSV</button>
-            </div>
-          </div>
-          <div class="canvasWrap">
-            <canvas id="g_cv2" class="h420"></canvas>
-            <div class="smallnote">Involute working flank generated through the same LOA-based pipeline (baseline analytical demo).</div>
-          </div>
-        </section>
-      </div>
-    `,
-    bind(pageEl){
-      setRefs(this.id, {
-        eps: pageEl.querySelector("#g_eps"),
-        loa: pageEl.querySelector("#g_loa"),
-        pb: pageEl.querySelector("#g_pb"),
-        cv1: pageEl.querySelector("#g_cv1"),
-        cv2: pageEl.querySelector("#g_cv2"),
-        exportLOA: pageEl.querySelector("#g_exportLOA"),
-        exportCP: pageEl.querySelector("#g_exportCP"),
-        exportProfile: pageEl.querySelector("#g_exportProfile"),
-      });
-      refs[this.id].exportLOA.addEventListener("click", exportLOACSV);
-      refs[this.id].exportCP.addEventListener("click", exportCPCSV);
-      refs[this.id].exportProfile.addEventListener("click", exportProfileCSV);
-    },
-    updateAfterCompute(){
-      const r = refs[this.id];
-      if (!r) return;
-      if (!state.base){
-        r.eps.textContent = r.loa.textContent = r.pb.textContent = "—";
-        return;
-      }
-      r.eps.textContent = fmt(state.base.eps, 6);
-      r.loa.textContent = fmt(state.base.loaLen, 4) + " mm";
-      r.pb.textContent = fmt(state.base.pb, 4) + " mm";
-    },
-    redraw(){
-      const r = refs[this.id];
-      if (!r) return;
-      const b = state.base, c = state.contact;
-      if (!b || !c){
-        drawXYGeometry(r.cv1, {});
-        drawXYGeometry(r.cv2, {});
-        return;
-      }
-
-      const circles = [];
-      if (ui.showCircles.checked){
-        circles.push(
-          {cx:0, cy:-b.ro1, r:b.rf1, color:"rgba(255,255,255,.16)", dashed:true},
-          {cx:0, cy:-b.ro1, r:b.ro1, color:"rgba(255,255,255,.20)", dashed:true},
-          {cx:0, cy:-b.ro1, r:b.rb1, color:"rgba(122,162,255,.26)", dashed:true},
-          {cx:0, cy:-b.ro1, r:b.ra1, color:"rgba(61,220,151,.20)", dashed:true}
-        );
-      }
-
-      const series1 = [];
-      if (ui.showCP.checked){
-        series1.push({x:b.xcp, y:b.ycp, color:"rgba(220,220,220,.55)", lineWidth:1.5});
-      }
-      if (ui.showLOA.checked || !ui.showCP.checked){ // keep visible by default if CP is off
-        series1.push({x:b.xLOA, y:b.yLOA, color:"rgba(61,220,151,.95)", lineWidth:2.4});
-      }
-
-      drawXYGeometry(r.cv1, {
-        title: "Contact Path / Working LOA",
-        series: series1,
-        points: [
-          {x:c.B[0], y:c.B[1], label:"B", color:"rgba(82,255,168,.95)"},
-          {x:c.P[0], y:c.P[1], label:"P", color:"rgba(255,255,255,.95)"},
-          {x:c.C[0], y:c.C[1], label:"C", color:"rgba(255,107,107,.95)"}
-        ]
-      });
-
-      drawXYGeometry(r.cv2, {
-        title: "Working Pinion Profile (Pitch-Point Frame)",
-        series: [{x:b.xPP, y:b.yPP, color:"rgba(122,162,255,.95)", lineWidth:2.2}],
-        circles
-      });
+    ctx.save();
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = opts.color;
+    ctx.beginPath();
+    for (let i=0;i<pts.length;i++){
+      const [x,y] = pts[i];
+      if (i===0) ctx.moveTo(X(x),Y(y));
+      else ctx.lineTo(X(x),Y(y));
     }
-  });
+    ctx.stroke();
+    ctx.restore();
 
-  registerPage({
-    id: "pageContact",
-    navIcon: "📐", navLabel: "Contact Ratio", navSmall: "εα",
-    title: "Contact Ratio Calculation",
-    desc: "Consistency checks: εα = L_LOA / t_g and εα = e_a / t_0.",
-    template: () => `
-      <div class="badgeRow">
-        <div class="badge">ε<sub>α</sub> from LOA: <strong id="c_epsLOA">—</strong></div>
-        <div class="badge">ε<sub>α</sub> from arcs: <strong id="c_epsArcs">—</strong></div>
-        <div class="badge">Pitch-point index: <strong id="c_idxP">—</strong></div>
-      </div>
-
-      <div class="split">
-        <section class="card">
-          <div class="head"><h2>Contact metrics</h2></div>
-          <div class="body">
-            <div class="kv"><div class="k">LOA length L<sub>LOA</sub> [mm]</div><div class="v" id="c_L">—</div></div>
-            <div class="kv"><div class="k">Base pitch p<sub>b</sub> [mm]</div><div class="v" id="c_pb">—</div></div>
-            <div class="kv"><div class="k">Circular pitch t₀ = πm [mm]</div><div class="v" id="c_t0">—</div></div>
-            <div class="kv"><div class="k">Projected pitch on LOA t<sub>g</sub> [mm]</div><div class="v" id="c_tg">—</div></div>
-            <div class="kv"><div class="k">Arc B→P on pinion pitch circle [mm]</div><div class="v" id="c_arc1">—</div></div>
-            <div class="kv"><div class="k">Arc P→C on gear pitch circle [mm]</div><div class="v" id="c_arc2">—</div></div>
-            <div class="kv"><div class="k">Effective contact length e<sub>a</sub> [mm]</div><div class="v" id="c_ea">—</div></div>
-            <div class="hint" style="margin-top:10px">
-              This page is useful for verifying the geometry extraction and pitch-point detection before moving to tribology/STE studies.
-            </div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="head"><h2>s-coordinate along engagement</h2></div>
-          <div class="canvasWrap">
-            <canvas id="c_cv" class="h420"></canvas>
-            <div class="smallnote">Plot of signed arc-length coordinate <span class="mono">s</span> (relative to pitch point) over pinion rotation angle on the working LOA.</div>
-          </div>
-        </section>
-      </div>
-    `,
-    bind(pageEl){
-      setRefs(this.id, {
-        epsLOA: pageEl.querySelector("#c_epsLOA"),
-        epsArcs: pageEl.querySelector("#c_epsArcs"),
-        idxP: pageEl.querySelector("#c_idxP"),
-        L: pageEl.querySelector("#c_L"),
-        pb: pageEl.querySelector("#c_pb"),
-        t0: pageEl.querySelector("#c_t0"),
-        tg: pageEl.querySelector("#c_tg"),
-        arc1: pageEl.querySelector("#c_arc1"),
-        arc2: pageEl.querySelector("#c_arc2"),
-        ea: pageEl.querySelector("#c_ea"),
-        cv: pageEl.querySelector("#c_cv")
-      });
-    },
-    updateAfterCompute(){
-      const r = refs[this.id];
-      if (!r) return;
-      const c = state.contact;
-      if (!c){
-        Object.values(r).forEach(v => { if (v && "textContent" in v && v.tagName !== "CANVAS") v.textContent = "—"; });
-        return;
+    if (showLOA){
+      const xL = opts.loa.x, yL = opts.loa.y;
+      ctx.save();
+      ctx.lineWidth = 2.0;
+      ctx.strokeStyle = "rgba(61,220,151,.82)";
+      ctx.beginPath();
+      for (let i=0;i<xL.length;i++){
+        if (i===0) ctx.moveTo(X(xL[i]), Y(yL[i]));
+        else ctx.lineTo(X(xL[i]), Y(yL[i]));
       }
-      r.epsLOA.textContent = fmt(c.eps_LOA, 6);
-      r.epsArcs.textContent = fmt(c.eps_arcs, 6);
-      r.idxP.textContent = String(c.idxP + 1);
-      r.L.textContent = fmt(c.L_LOA, 6);
-      r.pb.textContent = fmt(c.p_b, 6);
-      r.t0.textContent = fmt(c.t0, 6);
-      r.tg.textContent = fmt(c.tg, 6);
-      r.arc1.textContent = fmt(c.arc_GEAR1, 6);
-      r.arc2.textContent = fmt(c.arc_GEAR2, 6);
-      r.ea.textContent = fmt(c.ea, 6);
-    },
-    redraw(){
-      const r = refs[this.id];
-      if (!r) return;
-      const c = state.contact;
-      if (!c){ drawLinePlot(r.cv, {}); return; }
-
-      drawLinePlot(r.cv, {
-        title: "Signed engagement coordinate s along working LOA",
-        xlabel: "Pinion rotation angle θ [rad]",
-        ylabel: "s from pitch point [mm]",
-        xDigits: 5, yDigits: 4,
-        markers: [{x:0, label:"θ=0 (if inside range)", color:"rgba(255,255,255,.18)"}],
-        series: [{x: c.theta_pinion_LOA, y: c.s_from_pitch, color:"rgba(122,162,255,.95)", lineWidth:2.2}],
-        legend: [{label:"s(θ)", color:"rgba(122,162,255,.95)"}]
-      });
-    }
-  });
-
-  registerPage({
-    id: "pageLoad",
-    navIcon: "📈", navLabel: "Load Sharing", navSmall: "R_M",
-    title: "Load Sharing Diagram",
-    desc: "Approximate shared normal load / load-sharing ratio along engagement (Sánchez-style piecewise model).",
-    template: () => `
-      <div class="badgeRow">
-        <div class="badge">F<sub>t</sub>: <strong id="l_Ft">—</strong></div>
-        <div class="badge">F<sub>n</sub>: <strong id="l_Fn">—</strong></div>
-        <div class="badge">P<sub>in</sub>: <strong id="l_Pin">—</strong></div>
-        <div class="badge">ε<sub>α</sub>: <strong id="l_eps">—</strong></div>
-      </div>
-
-      <div class="split">
-        <section class="card">
-          <div class="head">
-            <h2>Load-sharing plot</h2>
-            <div class="row">
-              <button class="btn good" id="l_exportCSV">Export load-sharing CSV</button>
-            </div>
-          </div>
-          <div class="canvasWrap">
-            <canvas id="l_cv" class="h420"></canvas>
-            <div class="smallnote">Select x/y variables from the shared sidebar controls. Transition markers A–B–D–E can be shown/hidden.</div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="head"><h2>Details</h2></div>
-          <div class="body">
-            <div class="kv"><div class="k">n₁ [rpm]</div><div class="v" id="l_rpm">—</div></div>
-            <div class="kv"><div class="k">T₁ [Nm]</div><div class="v" id="l_torque">—</div></div>
-            <div class="kv"><div class="k">b [mm]</div><div class="v" id="l_b">—</div></div>
-            <div class="kv"><div class="k">ω₁ [rad/s]</div><div class="v" id="l_w1">—</div></div>
-            <div class="kv"><div class="k">ω₂ [rad/s]</div><div class="v" id="l_w2">—</div></div>
-            <div class="sep"></div>
-            <div class="kv"><div class="k">ψ_A</div><div class="v" id="l_psiA">—</div></div>
-            <div class="kv"><div class="k">ψ_B</div><div class="v" id="l_psiB">—</div></div>
-            <div class="kv"><div class="k">ψ_D</div><div class="v" id="l_psiD">—</div></div>
-            <div class="kv"><div class="k">ψ_E</div><div class="v" id="l_psiE">—</div></div>
-            <div class="kv"><div class="k">θ_A</div><div class="v" id="l_thetaA">—</div></div>
-            <div class="kv"><div class="k">θ_B</div><div class="v" id="l_thetaB">—</div></div>
-            <div class="kv"><div class="k">θ_D</div><div class="v" id="l_thetaD">—</div></div>
-            <div class="kv"><div class="k">θ_E</div><div class="v" id="l_thetaE">—</div></div>
-          </div>
-        </section>
-      </div>
-    `,
-    bind(pageEl){
-      setRefs(this.id, {
-        Ft: pageEl.querySelector("#l_Ft"),
-        Fn: pageEl.querySelector("#l_Fn"),
-        Pin: pageEl.querySelector("#l_Pin"),
-        eps: pageEl.querySelector("#l_eps"),
-        cv: pageEl.querySelector("#l_cv"),
-        rpm: pageEl.querySelector("#l_rpm"),
-        torque: pageEl.querySelector("#l_torque"),
-        b: pageEl.querySelector("#l_b"),
-        w1: pageEl.querySelector("#l_w1"),
-        w2: pageEl.querySelector("#l_w2"),
-        psiA: pageEl.querySelector("#l_psiA"),
-        psiB: pageEl.querySelector("#l_psiB"),
-        psiD: pageEl.querySelector("#l_psiD"),
-        psiE: pageEl.querySelector("#l_psiE"),
-        thetaA: pageEl.querySelector("#l_thetaA"),
-        thetaB: pageEl.querySelector("#l_thetaB"),
-        thetaD: pageEl.querySelector("#l_thetaD"),
-        thetaE: pageEl.querySelector("#l_thetaE"),
-        exportCSV: pageEl.querySelector("#l_exportCSV")
-      });
-      refs[this.id].exportCSV.addEventListener("click", exportLoadCSV);
-    },
-    updateAfterCompute(){
-      const r = refs[this.id];
-      if (!r) return;
-      const ld = state.load, ex = state.extra, c = state.contact;
-      if (!ld || !ex || !c){
-        Object.entries(r).forEach(([k,v]) => {
-          if (v && "textContent" in v && v.tagName !== "CANVAS" && k !== "exportCSV") v.textContent = "—";
-        });
-        return;
-      }
-
-      r.Ft.textContent = fmt(ld.F_t,2) + " N";
-      r.Fn.textContent = fmt(ld.F_n,2) + " N";
-      r.Pin.textContent = fmt(ld.P_in,2) + " W";
-      r.eps.textContent = fmt(c.eps_LOA,6);
-
-      r.rpm.textContent = fmt(ex.rpm,2);
-      r.torque.textContent = fmt(ex.torque,4);
-      r.b.textContent = fmt(ex.b,4);
-      r.w1.textContent = fmt(ld.omega1,6);
-      r.w2.textContent = fmt(ld.omega2,6);
-
-      r.psiA.textContent = fmt(ld.psi_A,6);
-      r.psiB.textContent = isFinite(ld.psi_B) ? fmt(ld.psi_B,6) : "—";
-      r.psiD.textContent = isFinite(ld.psi_D) ? fmt(ld.psi_D,6) : "—";
-      r.psiE.textContent = fmt(ld.psi_E,6);
-
-      r.thetaA.textContent = isFinite(ld.theta_A) ? fmt(ld.theta_A,8) : "—";
-      r.thetaB.textContent = isFinite(ld.theta_B) ? fmt(ld.theta_B,8) : "—";
-      r.thetaD.textContent = isFinite(ld.theta_D) ? fmt(ld.theta_D,8) : "—";
-      r.thetaE.textContent = isFinite(ld.theta_E) ? fmt(ld.theta_E,8) : "—";
-    },
-    redraw(){
-      const r = refs[this.id];
-      if (!r) return;
-      const ld = state.load, ct = state.contact;
-      if (!ld || !ct){ drawLinePlot(r.cv, {}); return; }
-
-      const xMode = ui.loadXAxis.value;
-      const yMode = ui.loadYAxis.value;
-      const showMarkers = ui.loadMarkers.value === "yes";
-
-      let x, xlabel, markers = [];
-      if (xMode === "theta"){
-        x = ct.theta_pinion_LOA.slice();
-        xlabel = "Pinion angle θ [rad]";
-        if (showMarkers){
-          markers = [
-            {x:ld.theta_A, label:"A"},
-            {x:ld.theta_B, label:"B"},
-            {x:0, label:"P"},
-            {x:ld.theta_D, label:"D"},
-            {x:ld.theta_E, label:"E"}
-          ];
-        }
-      } else {
-        x = ct.s_from_pitch.slice();
-        xlabel = "Distance from pitch point s [mm]";
-        if (showMarkers){
-          markers = [
-            {x: isFinite(ld.theta_A) ? interpLinear(ct.theta_pinion_LOA, ct.s_from_pitch, ld.theta_A) : NaN, label:"A"},
-            {x: isFinite(ld.theta_B) ? interpLinear(ct.theta_pinion_LOA, ct.s_from_pitch, ld.theta_B) : NaN, label:"B"},
-            {x: 0, label:"P"},
-            {x: isFinite(ld.theta_D) ? interpLinear(ct.theta_pinion_LOA, ct.s_from_pitch, ld.theta_D) : NaN, label:"D"},
-            {x: isFinite(ld.theta_E) ? interpLinear(ct.theta_pinion_LOA, ct.s_from_pitch, ld.theta_E) : NaN, label:"E"}
-          ];
-        }
-      }
-
-      let y, ylabel, color, title, yDigits;
-      if (yMode === "RM"){
-        y = ld.R_M.slice();
-        ylabel = "Load-sharing ratio R_M [-]";
-        color = "rgba(122,162,255,.95)";
-        title = "Load-sharing ratio along engagement";
-        yDigits = 3;
-      } else {
-        y = ld.F_n_shared.slice();
-        ylabel = "Shared normal load F_n,shared [N]";
-        color = "rgba(61,220,151,.95)";
-        title = "Shared normal load per active tooth pair";
-        yDigits = 1;
-      }
-
-      drawLinePlot(r.cv, {
-        title, xlabel, ylabel,
-        xDigits: 4, yDigits,
-        markers,
-        series: [{x,y,color,lineWidth:2.2}],
-        legend: [{label: yMode === "RM" ? "R_M" : "F_n,shared", color}]
-      });
-    }
-  });
-
-  registerPage({
-    id: "pageSTE",
-    navIcon: "🧠", navLabel: "NN-based STE", navSmall: "/api/ste",
-    title: "NN-based STE (FastAPI backend)",
-    desc: "POST request to /api/ste, scientific plotting of STE_bar, STE_phi_2 and G over x_vals.",
-    template: () => `
-      <div class="badgeRow">
-        <div class="badge">Points: <strong id="s_npts">—</strong></div>
-        <div class="badge">max |STĒ|: <strong id="s_maxSteBar">—</strong></div>
-        <div class="badge">max |STE<sub>φ₂</sub>|: <strong id="s_maxStePhi2">—</strong></div>
-        <div class="badge">max G: <strong id="s_maxG">—</strong></div>
-        <div class="badge">API time: <strong id="s_dt">—</strong></div>
-      </div>
-
-      <div class="split">
-        <section class="card">
-          <div class="head">
-            <h2>STE request parameters</h2>
-            <div class="row">
-              <button class="btn good" id="s_run">Run /api/ste</button>
-              <button class="btn" id="s_reset">Reset defaults</button>
-              <button class="btn" id="s_exportCSV">Export STE CSV</button>
-            </div>
-          </div>
-          <div class="body">
-            <div class="grid3">
-              <div class="field"><label>x_vals_pop</label><input id="s_x_vals_pop" type="number" step="1" value="1000"></div>
-              <div class="field"><label>sy</label><input id="s_sy" type="number" step="1" value="1000"></div>
-              <div class="field"><label>m [mm]</label><input id="s_m" type="number" step="0.01" value="3"></div>
-
-              <div class="field"><label>Z1</label><input id="s_Z1" type="number" step="1" value="50"></div>
-              <div class="field"><label>Z2</label><input id="s_Z2" type="number" step="1" value="50"></div>
-              <div class="field"><label>a0_deg</label><input id="s_a0_deg" type="number" step="0.01" value="20"></div>
-
-              <div class="field"><label>Cc1</label><input id="s_Cc1" type="number" step="0.01" value="0.15"></div>
-              <div class="field"><label>Cc2</label><input id="s_Cc2" type="number" step="0.01" value="0.15"></div>
-              <div class="field"><label>Ck1</label><input id="s_Ck1" type="number" step="0.01" value="1"></div>
-
-              <div class="field"><label>Ck2</label><input id="s_Ck2" type="number" step="0.01" value="1"></div>
-              <div class="field"><label>Cf1</label><input id="s_Cf1" type="number" step="0.01" value="1"></div>
-              <div class="field"><label>Cf2</label><input id="s_Cf2" type="number" step="0.01" value="1"></div>
-
-              <div class="field"><label>Cs1</label><input id="s_Cs1" type="number" step="0.01" value="0.49"></div>
-              <div class="field"><label>Cs2</label><input id="s_Cs2" type="number" step="0.01" value="0.49"></div>
-              <div class="field"><label>E_to_sy</label><input id="s_E_to_sy" type="number" step="1" value="200"></div>
-
-              <div class="field"><label>ni</label><input id="s_ni" type="number" step="0.01" value="0.3"></div>
-              <div class="field"><label>log_Tmid_to_max</label><input id="s_log_Tmid_to_max" type="number" step="0.1" value="-0.5"></div>
-              <div class="field"><label>b_to_m</label><input id="s_b_to_m" type="number" step="0.1" value="30"></div>
-
-              <div class="field"><label>da12_to_m</label><input id="s_da12_to_m" type="number" step="0.01" value="0"></div>
-              <div class="field" style="grid-column: span 2;">
-                <label>Plot quantity (STE page)</label>
-                <select id="s_plotMode">
-                  <option value="both">STĒ & STEφ₂ (same plot)</option>
-                  <option value="bar">STĒ only</option>
-                  <option value="phi2">STEφ₂ only</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:10px">
-              <label class="toggle"><input id="s_debug" type="checkbox"> debug=true (show backend run_info)</label>
-              <button class="btn" id="s_fillFromShared">Fill from shared geometry/operating</button>
-            </div>
-
-            <div class="hint" style="margin-top:10px">
-              <b>Tip:</b> Use <span class="mono">Fill from shared geometry/operating</span> to map
-              <span class="mono">Z1, Z2, m, a0_deg, Ck1/2, Cf1/2, b_to_m</span> from the sidebar values.
-            </div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="head"><h2>STE response summary</h2></div>
-          <div class="body">
-            <div class="kv"><div class="k">Backend status</div><div class="v" id="s_backendStatus">—</div></div>
-            <div class="kv"><div class="k">x range</div><div class="v" id="s_xRange">—</div></div>
-            <div class="kv"><div class="k">STĒ range</div><div class="v" id="s_barRange">—</div></div>
-            <div class="kv"><div class="k">STEφ₂ range</div><div class="v" id="s_phi2Range">—</div></div>
-            <div class="kv"><div class="k">G range</div><div class="v" id="s_gRange">—</div></div>
-            <div class="kv"><div class="k">Scalars in response</div><div class="v" id="s_scalarsCount">—</div></div>
-
-            <div class="sep"></div>
-            <div class="smallnote" style="margin-bottom:8px">
-              Selected scalar values (if present in backend response):
-            </div>
-            <div id="s_scalarsTableWrap">
-              <table class="tableLite">
-                <thead><tr><th>Key</th><th>Value</th></tr></thead>
-                <tbody><tr><td>—</td><td>—</td></tr></tbody>
-              </table>
-            </div>
-
-            <div class="sep"></div>
-            <div class="smallnote" style="margin-bottom:6px">Debug / backend run info (shown if debug=true and available)</div>
-            <div class="logbox" id="s_logbox">No run yet.</div>
-          </div>
-        </section>
-      </div>
-
-      <section class="card">
-        <div class="head"><h2>STE curves vs x_vals</h2></div>
-        <div class="canvasWrap">
-          <canvas id="s_cvSte"></canvas>
-          <div class="smallnote">
-            Main curve plot from backend arrays: <span class="mono">x_vals</span>, <span class="mono">STE_bar</span>,
-            <span class="mono">STE_phi_2</span>. Scientific overlay mode available.
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="head"><h2>Auxiliary response curve G(x)</h2></div>
-        <div class="canvasWrap">
-          <canvas id="s_cvG" class="h360"></canvas>
-          <div class="smallnote">Auxiliary backend output <span class="mono">G</span> plotted separately for clarity.</div>
-        </div>
-      </section>
-    `,
-    bind(pageEl){
-      const r = {
-        // badges
-        npts: pageEl.querySelector("#s_npts"),
-        maxSteBar: pageEl.querySelector("#s_maxSteBar"),
-        maxStePhi2: pageEl.querySelector("#s_maxStePhi2"),
-        maxG: pageEl.querySelector("#s_maxG"),
-        dt: pageEl.querySelector("#s_dt"),
-
-        // inputs
-        x_vals_pop: pageEl.querySelector("#s_x_vals_pop"),
-        sy: pageEl.querySelector("#s_sy"),
-        m: pageEl.querySelector("#s_m"),
-        Z1: pageEl.querySelector("#s_Z1"),
-        Z2: pageEl.querySelector("#s_Z2"),
-        a0_deg: pageEl.querySelector("#s_a0_deg"),
-        Cc1: pageEl.querySelector("#s_Cc1"),
-        Cc2: pageEl.querySelector("#s_Cc2"),
-        Ck1: pageEl.querySelector("#s_Ck1"),
-        Ck2: pageEl.querySelector("#s_Ck2"),
-        Cf1: pageEl.querySelector("#s_Cf1"),
-        Cf2: pageEl.querySelector("#s_Cf2"),
-        Cs1: pageEl.querySelector("#s_Cs1"),
-        Cs2: pageEl.querySelector("#s_Cs2"),
-        E_to_sy: pageEl.querySelector("#s_E_to_sy"),
-        ni: pageEl.querySelector("#s_ni"),
-        log_Tmid_to_max: pageEl.querySelector("#s_log_Tmid_to_max"),
-        b_to_m: pageEl.querySelector("#s_b_to_m"),
-        da12_to_m: pageEl.querySelector("#s_da12_to_m"),
-        debug: pageEl.querySelector("#s_debug"),
-        plotMode: pageEl.querySelector("#s_plotMode"),
-
-        // buttons
-        run: pageEl.querySelector("#s_run"),
-        reset: pageEl.querySelector("#s_reset"),
-        exportCSV: pageEl.querySelector("#s_exportCSV"),
-        fillFromShared: pageEl.querySelector("#s_fillFromShared"),
-
-        // summary
-        backendStatus: pageEl.querySelector("#s_backendStatus"),
-        xRange: pageEl.querySelector("#s_xRange"),
-        barRange: pageEl.querySelector("#s_barRange"),
-        phi2Range: pageEl.querySelector("#s_phi2Range"),
-        gRange: pageEl.querySelector("#s_gRange"),
-        scalarsCount: pageEl.querySelector("#s_scalarsCount"),
-        scalarsTableWrap: pageEl.querySelector("#s_scalarsTableWrap"),
-        logbox: pageEl.querySelector("#s_logbox"),
-
-        // plots
-        cvSte: pageEl.querySelector("#s_cvSte"),
-        cvG: pageEl.querySelector("#s_cvG")
-      };
-      setRefs(this.id, r);
-
-      r.run.addEventListener("click", runSTERequest);
-      r.reset.addEventListener("click", resetSTEInputs);
-      r.exportCSV.addEventListener("click", exportSteCSV);
-      r.fillFromShared.addEventListener("click", fillSteFromShared);
-      r.plotMode.addEventListener("change", () => this.redraw());
-    },
-    updateAfterCompute(){
-      // This page updates mainly after explicit STE run.
-      // Keep as-is; redraw will show current state.ste if available.
-    },
-    redraw(){
-      const r = refs[this.id];
-      if (!r) return;
-
-      const steWrap = state.ste;
-      if (!steWrap || !steWrap.data){
-        // reset labels
-        r.npts.textContent = r.maxSteBar.textContent = r.maxStePhi2.textContent = r.maxG.textContent = r.dt.textContent = "—";
-        r.backendStatus.textContent = r.xRange.textContent = r.barRange.textContent = r.phi2Range.textContent = r.gRange.textContent = r.scalarsCount.textContent = "—";
-        r.logbox.textContent = "No run yet.";
-        r.scalarsTableWrap.innerHTML = '<table class="tableLite"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody><tr><td>—</td><td>—</td></tr></tbody></table>';
-        drawLinePlot(r.cvSte, {});
-        drawLinePlot(r.cvG, {});
-        return;
-      }
-
-      const data = steWrap.data;
-      const dtMs = steWrap.dtMs;
-
-      const x = Array.isArray(data.x_vals) ? data.x_vals : [];
-      const bar = Array.isArray(data.STE_bar) ? data.STE_bar : [];
-      const phi2 = Array.isArray(data.STE_phi_2) ? data.STE_phi_2 : [];
-      const G = Array.isArray(data.G) ? data.G : [];
-
-      const xb = safeFinitePairArrays(x, bar);
-      const xp = safeFinitePairArrays(x, phi2);
-      const xg = safeFinitePairArrays(x, G);
-
-      const absMax = (arr) => {
-        let m = NaN;
-        for (const v of arr){
-          if (Number.isFinite(v)) m = Number.isFinite(m) ? Math.max(m, Math.abs(v)) : Math.abs(v);
-        }
-        return m;
-      };
-      const minMax = (arr) => {
-        let mn = Infinity, mx = -Infinity;
-        for (const v of arr){
-          if (!Number.isFinite(v)) continue;
-          mn = Math.min(mn, v); mx = Math.max(mx, v);
-        }
-        if (!isFinite(mn)) return [NaN, NaN];
-        return [mn, mx];
-      };
-
-      const [xmin, xmax] = minMax(x);
-      const [bmin, bmax] = minMax(bar);
-      const [pmin, pmax] = minMax(phi2);
-      const [gmin, gmax] = minMax(G);
-
-      r.npts.textContent = String(Math.max(x.length, bar.length, phi2.length, G.length));
-      r.maxSteBar.textContent = fmtSci(absMax(bar), 4);
-      r.maxStePhi2.textContent = fmtSci(absMax(phi2), 4);
-      r.maxG.textContent = fmtSci(absMax(G), 4);
-      r.dt.textContent = Number.isFinite(dtMs) ? (fmt(dtMs,1) + " ms") : "—";
-
-      r.backendStatus.textContent = data.ok ? "ok=true" : "ok=false";
-      r.xRange.textContent = Number.isFinite(xmin) ? ("[" + fmt(xmin,6) + ", " + fmt(xmax,6) + "]") : "—";
-      r.barRange.textContent = Number.isFinite(bmin) ? ("[" + fmtSci(bmin,4) + ", " + fmtSci(bmax,4) + "]") : "—";
-      r.phi2Range.textContent = Number.isFinite(pmin) ? ("[" + fmtSci(pmin,4) + ", " + fmtSci(pmax,4) + "]") : "—";
-      r.gRange.textContent = Number.isFinite(gmin) ? ("[" + fmtSci(gmin,4) + ", " + fmtSci(gmax,4) + "]") : "—";
-
-      // scalars table from response
-      const scalarEntries = Object.entries(data)
-        .filter(([k,v]) => !Array.isArray(v) && typeof v !== "object" && v !== null)
-        .sort((a,b)=> a[0].localeCompare(b[0]));
-      r.scalarsCount.textContent = String(scalarEntries.length);
-
-      const rows = scalarEntries.slice(0, 24).map(([k,v]) => `<tr><td class="mono">${escapeHtml(k)}</td><td class="mono">${escapeHtml(String(v))}</td></tr>`).join("");
-      r.scalarsTableWrap.innerHTML = `
-        <table class="tableLite">
-          <thead><tr><th>Key</th><th>Value</th></tr></thead>
-          <tbody>${rows || '<tr><td>—</td><td>—</td></tr>'}</tbody>
-        </table>
-      `;
-
-      // debug log
-      const runInfo = data.run_info || null;
-      if (runInfo){
-        r.logbox.textContent =
-`cmd: ${JSON.stringify(runInfo.cmd || [])}
-cwd: ${runInfo.cwd || "—"}
-returncode: ${runInfo.returncode ?? "—"}
-
-STDOUT:
-${runInfo.stdout || ""}
-
-STDERR:
-${runInfo.stderr || ""}`.trim();
-      } else {
-        r.logbox.textContent = "No run_info returned (debug=false or backend omitted debug info).";
-      }
-
-      // Main STE plot
-      const plotMode = r.plotMode.value;
-      const series = [];
-      const legend = [];
-
-      if (plotMode === "both" || plotMode === "bar"){
-        series.push({ x: xb.x, y: xb.y, color:"rgba(122,162,255,.95)", lineWidth:2.2 });
-        legend.push({ label:"STĒ", color:"rgba(122,162,255,.95)" });
-      }
-      if (plotMode === "both" || plotMode === "phi2"){
-        series.push({ x: xp.x, y: xp.y, color:"rgba(61,220,151,.95)", lineWidth:2.0, dashed:false });
-        legend.push({ label:"STEφ₂", color:"rgba(61,220,151,.95)" });
-      }
-
-      drawLinePlot(r.cvSte, {
-        title: "NN-based STE outputs vs x_vals",
-        xlabel: "x_vals [-]",
-        ylabel: (plotMode === "both" ? "STE outputs" : (plotMode === "bar" ? "STĒ" : "STEφ₂")),
-        xDigits: 4,
-        yDigits: 6,
-        yPadFrac: 0.10,
-        series,
-        legend
-      });
-
-      // G plot
-      drawLinePlot(r.cvG, {
-        title: "Auxiliary response G(x)",
-        xlabel: "x_vals [-]",
-        ylabel: "G [-]",
-        xDigits: 4, yDigits: 6,
-        yPadFrac: 0.12,
-        series: [{ x:xg.x, y:xg.y, color:"rgba(255,204,102,.95)", lineWidth:2.1 }],
-        legend: [{ label:"G", color:"rgba(255,204,102,.95)" }]
-      });
-    }
-  });
-
-  // ---------------------------
-  // Page builder / navigation
-  // ---------------------------
-  function buildPages(){
-    ui.navPages.innerHTML = "";
-    ui.pagesRoot.innerHTML = "";
-
-    for (const p of pages){
-      const btn = document.createElement("button");
-      btn.className = "navbtn";
-      btn.dataset.page = p.id;
-      btn.innerHTML = `${p.navIcon || "•"} ${p.navLabel || p.id} <small>${p.navSmall || ""}</small>`;
-      ui.navPages.appendChild(btn);
-
-      const section = document.createElement("section");
-      section.className = "page";
-      section.id = p.id;
-      section.innerHTML = p.template ? p.template() : "";
-      ui.pagesRoot.appendChild(section);
-
-      if (typeof p.bind === "function") p.bind(section);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
-  function setActivePage(pageId){
-    const p = pageMap.get(pageId);
-    if (!p) return;
-    state.activePageId = pageId;
+  function drawGeometryDual(){
+    const b = state.base;
 
-    for (const page of pages){
-      const node = document.getElementById(page.id);
-      if (node) node.classList.toggle("active", page.id === pageId);
-    }
-    ui.navPages.querySelectorAll(".navbtn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.page === pageId);
+    drawToothCanvas(ui.cvPinion, b, state.pinionTooth, state.pinionFull, {
+      color: "rgba(122,162,255,.95)",
+      isPinion: true,
+      loa: state.base ? {x: state.base.xLOA, y: state.base.yLOA} : null
     });
 
-    ui.pageTitle.textContent = p.title || pageId;
-    ui.pageDesc.textContent = p.desc || "";
-    redrawCurrentPage();
+    drawToothCanvas(ui.cvGear, b, state.gearTooth, state.gearFull, {
+      color: "rgba(255,107,107,.95)",
+      isPinion: false
+    });
   }
 
-  function redrawCurrentPage(){
-    const p = pageMap.get(state.activePageId);
-    if (p && typeof p.redraw === "function") p.redraw();
+  function drawMeshView(){
+    const {ctx, cssW, cssH} = setupHiDPICanvas(ui.cvMesh);
+
+    if (!state.base || !state.pinionFull || !state.gearFull){
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillText("—", 18, 28);
+      ctx.restore();
+      return;
+    }
+
+    const base = state.base;
+    const a_w = (base.z1 + base.z2) * base.m / 2; // mm
+
+    const gearRot = Math.PI + (Math.PI / base.z2);
+
+    function transformXY(x, y, rot, tx, ty){
+      const c = Math.cos(rot), s = Math.sin(rot);
+      return [x*c - y*s + tx, x*s + y*c + ty];
+    }
+
+    const pinPts = [];
+    for (let i=0;i<state.pinionFull.x_tot.length;i++){
+      pinPts.push([state.pinionFull.x_tot[i], state.pinionFull.y_tot[i]]);
+    }
+
+    const gearPts = [];
+    for (let i=0;i<state.gearFull.x_tot.length;i++){
+      const x = state.gearFull.x_tot[i];
+      const y = state.gearFull.y_tot[i];
+      gearPts.push(transformXY(x, y, gearRot, 0, a_w));
+    }
+
+    let xmin=+Infinity, xmax=-Infinity, ymin=+Infinity, ymax=-Infinity;
+    function expand(pts){
+      for (const [x,y] of pts){
+        xmin = Math.min(xmin,x); xmax = Math.max(xmax,x);
+        ymin = Math.min(ymin,y); ymax = Math.max(ymax,y);
+      }
+    }
+    expand(pinPts); expand(gearPts);
+
+    xmin = Math.min(xmin, -base.ra1, -base.ra2);
+    xmax = Math.max(xmax,  base.ra1,  base.ra2);
+    ymin = Math.min(ymin, -base.ra1,  a_w - base.ra2);
+    ymax = Math.max(ymax,  base.ra1,  a_w + base.ra2);
+
+    const pad = 18;
+
+    const xP = 0;           // pitch point in this setup
+    const yP = base.ro1;    // along line of centers
+
+    const dxMax = Math.max(Math.abs(xmax - xP), Math.abs(xmin - xP));
+    const dyMax = Math.max(Math.abs(ymax - yP), Math.abs(ymin - yP));
+    const sFit = Math.min(
+      (cssW/2 - pad) / Math.max(1e-9, dxMax),
+      (cssH/2 - pad) / Math.max(1e-9, dyMax)
+    );
+
+    const s = sFit * state.view.zoom;
+
+    const cx = cssW/2 + state.view.panX;
+    const cy = cssH/2 + state.view.panY;
+
+    function X(x){ return cx + (x - xP)*s; }
+    function Y(y){ return cy - (y - yP)*s; }
+
+    function drawCircleWorld(r, x0, y0){
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6,6]);
+      ctx.beginPath();
+      ctx.arc(X(x0), Y(y0), Math.max(0,r*s), 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    drawCircleWorld(base.ra1, 0, 0);
+    drawCircleWorld(base.ro1, 0, 0);
+    drawCircleWorld(base.rf1, 0, 0);
+
+    drawCircleWorld(base.ra2, 0, a_w);
+    drawCircleWorld(base.ro2, 0, a_w);
+    drawCircleWorld(base.rf2, 0, a_w);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,.08)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0));
+    ctx.lineTo(X(0), Y(a_w));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    function drawPolyline(pts, color){
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.25;
+      ctx.beginPath();
+      for (let i=0;i<pts.length;i++){
+        const [x,y] = pts[i];
+        const px = X(x), py = Y(y);
+        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    drawPolyline(pinPts, "rgba(122,162,255,.95)");
+    drawPolyline(gearPts, "rgba(255,107,107,.95)");
   }
 
-  function updateAllPages(){
-    for (const p of pages){
-      if (typeof p.updateAfterCompute === "function") p.updateAfterCompute();
+  const matPresets = {
+    steel250: {St: 430, Sc: 1100, E: 206000, nu: 0.30},
+    steel300: {St: 520, Sc: 1250, E: 206000, nu: 0.30},
+    carb:     {St: 900, Sc: 2000, E: 206000, nu: 0.30},
+    nitr:     {St: 800, Sc: 1600, E: 206000, nu: 0.30},
+    castiron: {St: 220, Sc: 650,  E: 170000, nu: 0.26},
+    bronze:   {St: 260, Sc: 800,  E: 110000, nu: 0.34}
+  };
+
+  function applyMaterialPreset(){
+    const key = ui.agmaMat.value;
+    const p = matPresets[key] || matPresets.steel250;
+    ui.agmaSt.value = String(p.St);
+    ui.agmaSc.value = String(p.Sc);
+    ui.agmaE.value  = String(p.E);
+    ui.agmaNu.value = String(p.nu);
+  }
+
+  function lewisApproxY20FD(z){
+    const y = 0.154 - 0.912/Math.max(3, z);
+    return clamp(y, 0.05, 0.60);
+  }
+  function autoComputeJBoth(){
+    if (!state.base) return;
+    ui.agmaJ1.value = fmt(lewisApproxY20FD(state.base.z1), 3);
+    ui.agmaJ2.value = fmt(lewisApproxY20FD(state.base.z2), 3);
+  }
+  function autoComputeI(){
+    if (!state.base) return;
+    const base = state.base;
+    const phi = base.alphaRad;
+    const mN = parseFloat(ui.agmaMN.value);
+    const mG = base.z2 / base.z1;
+    const I = (Math.cos(phi)*Math.sin(phi) / (2*Math.max(1e-9,mN))) * (mG/(mG+1));
+    ui.agmaI.value = fmt(clamp(I, 0.02, 0.30), 3);
+  }
+  function computeZE(E, nu){
+    const denom = Math.PI * ( 2*(1 - nu*nu)/Math.max(1e-9, E) );
+    return Math.sqrt(1/Math.max(1e-12, denom));
+  }
+
+  function computeAGMAAll(){
+    if (!state.base) return null;
+
+    const base = state.base;
+
+    const m = base.m;
+    const b = parseFloat(ui.b.value);
+    const T = parseFloat(ui.torque.value);
+    if (!(isFinite(b) && b>0)) throw new Error("b must be > 0.");
+    if (!(isFinite(T) && T>0)) throw new Error("T must be > 0.");
+
+    const Ko = parseFloat(ui.agmaKo.value);
+    const Kv = parseFloat(ui.agmaKv.value);
+    const Ks = parseFloat(ui.agmaKs.value);
+    const KH = parseFloat(ui.agmaKH.value);
+    const KB = parseFloat(ui.agmaKB.value);
+    const ZR = parseFloat(ui.agmaZR.value);
+
+    const J1  = parseFloat(ui.agmaJ1.value);
+    const J2  = parseFloat(ui.agmaJ2.value);
+    const I   = parseFloat(ui.agmaI.value);
+
+    const St = parseFloat(ui.agmaSt.value);
+    const Sc = parseFloat(ui.agmaSc.value);
+    const E  = parseFloat(ui.agmaE.value);
+    const nu = parseFloat(ui.agmaNu.value);
+
+    const YN = parseFloat(ui.agmaYN.value);
+    const ZN = parseFloat(ui.agmaZN.value);
+    const YT = parseFloat(ui.agmaYT.value);
+    const YZ = parseFloat(ui.agmaYZ.value);
+    const ZW = parseFloat(ui.agmaZW.value);
+
+    const SF = parseFloat(ui.agmaSF.value);
+    const SH = parseFloat(ui.agmaSH.value);
+
+    const r1_m = (base.ro1 * 1e-3);
+    const Wt = T / r1_m;
+
+    const sigmaF1 = (Wt * Ko * Kv * Ks * KH * KB) / (Math.max(1e-9, b) * Math.max(1e-9, m) * Math.max(1e-9, J1));
+    const sigmaF2 = (Wt * Ko * Kv * Ks * KH * KB) / (Math.max(1e-9, b) * Math.max(1e-9, m) * Math.max(1e-9, J2));
+
+    const dp = base.m * base.z1;
+    const ZE = computeZE(E, nu);
+    const sigmaH = ZE * Math.sqrt(
+      (Wt * Ko * Kv * Ks * KH * ZR) / (Math.max(1e-9, b) * Math.max(1e-9, dp) * Math.max(1e-9, I))
+    );
+
+    const sigF_allow = (St * YN) / (Math.max(1e-9, YT) * Math.max(1e-9, YZ) * Math.max(1e-9, SF));
+    const sigH_allow = (Sc * ZN * ZW) / (Math.max(1e-9, YT) * Math.max(1e-9, YZ) * Math.max(1e-9, SH));
+
+    const SFF1 = sigF_allow / Math.max(1e-12, sigmaF1);
+    const SFF2 = sigF_allow / Math.max(1e-12, sigmaF2);
+    const SFH  = sigH_allow / Math.max(1e-12, sigmaH);
+
+    const passF1 = sigmaF1 <= sigF_allow + 1e-9;
+    const passF2 = sigmaF2 <= sigF_allow + 1e-9;
+    const passH  = sigmaH  <= sigH_allow + 1e-9;
+
+    return {
+      mesh: {sigmaH, sigH_allow, SFH, passH},
+      pinion: {sigmaF: sigmaF1, sigF_allow, SFF: SFF1, passF: passF1},
+      gear:   {sigmaF: sigmaF2, sigF_allow, SFF: SFF2, passF: passF2},
+      passAll: (passF1 && passF2 && passH)
+    };
+  }
+
+  function drawAGMADiagramMember(cv, title, member, mesh){
+    const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
+
+    if (!member || !mesh){
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillText("—", 18, 28);
+      ctx.restore();
+      return;
+    }
+
+    const maxV = Math.max(member.sigmaF, member.sigF_allow, mesh.sigmaH, mesh.sigH_allow) * 1.20;
+    const rect = {x:70, y:26, w: cssW-90, h: cssH-86};
+
+    function Y(v){ return rect.y + (1 - v/Math.max(1e-12,maxV))*rect.h; }
+
+    // plot background
+    ctx.save();
+    const g = ctx.createLinearGradient(0, rect.y, 0, rect.y+rect.h);
+    g.addColorStop(0, "rgba(255,255,255,.03)");
+    g.addColorStop(1, "rgba(255,255,255,.01)");
+    ctx.fillStyle = g;
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.restore();
+
+    // grid + ticks
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,.06)";
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "rgba(255,255,255,.65)";
+    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    for (let i=0;i<=5;i++){
+      const a = i/5;
+      const v = a*maxV;
+      const py = rect.y + (1-a)*rect.h;
+      ctx.beginPath(); ctx.moveTo(rect.x, py); ctx.lineTo(rect.x+rect.w, py); ctx.stroke();
+      ctx.fillText(fmt(v,0), rect.x-8, py);
+    }
+    ctx.restore();
+
+    // frame
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,.14)";
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.restore();
+
+    // title
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,.90)";
+    ctx.font = "950 12px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(title, rect.x, 6);
+    ctx.restore();
+
+    const gx1 = rect.x + rect.w*0.32;
+    const gx2 = rect.x + rect.w*0.74;
+    const barW = Math.min(68, rect.w*0.16);
+
+    function bar(xCenter, v, ok){
+      const x = xCenter - barW/2;
+      const y = Y(v);
+      const h = (rect.y+rect.h) - y;
+
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,.45)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = ok ? "rgba(122,162,255,.82)" : "rgba(255,107,107,.82)";
+      ctx.fillRect(x, y, barW, h);
+      ctx.restore();
+
+      // cap line
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,.18)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x+barW, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function allowLine(xCenter, v){
+      const y = Y(v);
+      ctx.save();
+      ctx.strokeStyle = "rgba(61,220,151,.92)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(xCenter - barW*0.85, y);
+      ctx.lineTo(xCenter + barW*0.85, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function topTag(x, y, txt, color){
+      ctx.save();
+      ctx.fillStyle = color || "rgba(255,255,255,.90)";
+      ctx.font = "900 11px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(txt, x, y);
+      ctx.restore();
+    }
+
+    function bottomLabel(x, txt){
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.78)";
+      ctx.font = "900 11px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(txt, x, rect.y+rect.h+10);
+      ctx.restore();
+    }
+
+    // bending
+    bar(gx1, member.sigmaF, member.passF);
+    allowLine(gx1, member.sigF_allow);
+    topTag(gx1, Y(member.sigmaF)-6, "σF=" + fmt(member.sigmaF,0));
+    topTag(gx1, Y(member.sigF_allow)-6, "allow=" + fmt(member.sigF_allow,0), "rgba(61,220,151,.92)");
+    bottomLabel(gx1, "Bending");
+
+    // contact
+    bar(gx2, mesh.sigmaH, mesh.passH);
+    allowLine(gx2, mesh.sigH_allow);
+    topTag(gx2, Y(mesh.sigmaH)-6, "σH=" + fmt(mesh.sigmaH,0));
+    topTag(gx2, Y(mesh.sigH_allow)-6, "allow=" + fmt(mesh.sigH_allow,0), "rgba(61,220,151,.92)");
+    bottomLabel(gx2, "Contact");
+
+    // y label
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,.70)";
+    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.translate(18, rect.y + rect.h/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Stress [MPa]", 0, 0);
+    ctx.restore();
+  }
+
+  function drawAGMADiagrams(){
+    const a = state.agma;
+    if (!a){
+      drawAGMADiagramMember(ui.cvAGMAPinion, "Pinion", null, null);
+      drawAGMADiagramMember(ui.cvAGMAGear, "Gear", null, null);
+      return;
+    }
+    drawAGMADiagramMember(ui.cvAGMAPinion, "Pinion", a.pinion, a.mesh);
+    drawAGMADiagramMember(ui.cvAGMAGear, "Gear", a.gear, a.mesh);
+  }
+
+  function setExportsEnabled(on){
+    ui.btnCSV_Profile.disabled = !on;
+    ui.btnCSV_Tooth.disabled = !on;
+    ui.btnCSV_Gear.disabled = !on;
+    ui.btnCSV_Segment.disabled = !on;
+    ui.segSelect.disabled = !on;
+  }
+
+  function updateKeyResults(){
+    const c = state.contact;
+    ui.res_eps.textContent = c ? fmt(c.eps_LOA, 2) : "—";
+    ui.res_loa.textContent = c ? fmt(c.L_LOA, 2) : "—";
+
+    if (!state.agma){
+      ui.res_agma.textContent = "—";
+      ui.res_agma.style.color = "";
+    } else {
+      ui.res_agma.textContent = state.agma.passAll ? "PASS" : "FAIL";
+      ui.res_agma.style.color = state.agma.passAll ? "var(--green)" : "var(--red)";
     }
   }
 
-  // ---------------------------
-  // Analytical compute pipeline
-  // ---------------------------
-  function computeAnalytical(){
-    try{
+  function updateCSVInfoUI(){
+    const segList = ui.segListInfo;
+    segList.innerHTML = "";
+    if (!state.base){
+      segList.innerHTML = '<div class="kv"><div class="k">—</div><div class="v">—</div></div>';
+      setExportsEnabled(false);
+      return;
+    }
+    setExportsEnabled(true);
+
+    function addItem(name, count){
+      const div = document.createElement("div");
+      div.className = "kv";
+      div.innerHTML = '<div class="k">'+name+'</div><div class="v">'+count+' pts</div>';
+      segList.appendChild(div);
+    }
+
+    addItem("Profile (pitch-point frame)", state.lastProfilePP ? state.lastProfilePP.x_pp.length : 0);
+    addItem("Tooth sector boundary", state.pinionTooth ? state.pinionTooth.x_tooth.length : 0);
+    addItem("Full outline", state.pinionFull ? state.pinionFull.x_tot.length : 0);
+
+    if (state.pinionSeg){
+      const map = {
+        rootL:"01_rootCircle_L", troL:"02_trochoid_L", invL:"03_involute_L",
+        add:"04_addendumArc", invR:"05_involute_R", troR:"06_trochoid_R", rootR:"07_rootCircle_R"
+      };
+      for (const k of Object.keys(map)){
+        addItem(map[k], (state.pinionSeg[k] || []).length);
+      }
+    }
+  }
+
+  function updateAGMAUI(){
+    const a = state.agma;
+    if (!a){
+      ui.agma_sigF1.textContent = "—";
+      ui.agma_sigF2.textContent = "—";
+      ui.agma_sigH.textContent  = "—";
+      ui.agma_SFs.textContent   = "—";
+      drawAGMADiagrams();
+      return;
+    }
+
+    ui.agma_sigF1.textContent = fmt(a.pinion.sigmaF,1) + " / " + fmt(a.pinion.sigF_allow,1);
+    ui.agma_sigF2.textContent = fmt(a.gear.sigmaF,1)   + " / " + fmt(a.gear.sigF_allow,1);
+    ui.agma_sigH.textContent  = fmt(a.mesh.sigmaH,1)   + " / " + fmt(a.mesh.sigH_allow,1);
+    ui.agma_SFs.textContent =
+      "SF₁=" + fmt(a.pinion.SFF,2) + " · " +
+      "SF₂=" + fmt(a.gear.SFF,2)   + " · " +
+      "SH="  + fmt(a.mesh.SFH,2);
+
+    drawAGMADiagrams();
+  }
+
+  function updateAllUI(){
+    updateKeyResults();
+    updateCSVInfoUI();
+    updateAGMAUI();
+  }
+
+  function exportProfileCSV(){
+    if (!state.lastProfilePP) return;
+    const {x_pp,y_pp} = state.lastProfilePP;
+    const rows = [["idx","x_pp_mm","y_pp_mm"]];
+    for (let i=0;i<x_pp.length;i++) rows.push([String(i+1), String(x_pp[i]), String(y_pp[i])]);
+    downloadCSV("pinion_profile_pitch_point.csv", rows);
+  }
+  function exportToothCSV(){
+    if (!state.pinionTooth) return;
+    const {x_tooth,y_tooth} = state.pinionTooth;
+    const rows = [["x_mm","y_mm"]];
+    for (let i=0;i<x_tooth.length;i++) rows.push([String(x_tooth[i]), String(y_tooth[i])]);
+    downloadCSV("tooth_outline_sector_pinion.csv", rows);
+  }
+  function exportGearCSV(){
+    if (!state.pinionFull) return;
+    const {x_tot,y_tot} = state.pinionFull;
+    const rows = [["x_mm","y_mm"]];
+    for (let i=0;i<x_tot.length;i++) rows.push([String(x_tot[i]), String(y_tot[i])]);
+    downloadCSV("gear_outline_full_pinion.csv", rows);
+  }
+  function exportSegmentCSV(){
+    if (!state.pinionSeg) return;
+    const key = ui.segSelect.value;
+    const seg = state.pinionSeg[key];
+    if (!seg || seg.length===0) return;
+
+    const rows = [["x_mm","y_mm"]];
+    for (const p of seg) rows.push([String(p[0]), String(p[1])]);
+
+    const mapName = {
+      rootL:"01_rootCircle_L",
+      troL:"02_trochoid_L",
+      invL:"03_involute_L",
+      add:"04_addendumArc",
+      invR:"05_involute_R",
+      troR:"06_trochoid_R",
+      rootR:"07_rootCircle_R"
+    };
+    downloadCSV(mapName[key] + ".csv", rows);
+  }
+
+  function computeAll(){
+    showErr(ui.errBox, "");
+    showErr(ui.agmaErr, "");
+
+    try {
       const m = parseFloat(ui.m.value);
-      const alphaDeg = parseFloat(ui.alpha.value);
-      const z1 = parseInt(ui.z1.value,10);
-      const z2 = parseInt(ui.z2.value,10);
+      const alphaRad = deg2rad(parseFloat(ui.alpha.value));
+      const z1 = parseInt(ui.z1.value, 10);
+      const z2 = parseInt(ui.z2.value, 10);
       const Ck = parseFloat(ui.Ck.value);
       const Cf = parseFloat(ui.Cf.value);
-      const N = parseInt(ui.N.value,10);
+      const rc = parseFloat(ui.rc.value);
+      const N = parseInt(ui.N.value, 10);
 
       const rpm = parseFloat(ui.rpm.value);
       const torque = parseFloat(ui.torque.value);
       const b = parseFloat(ui.b.value);
 
-      if (!(isFinite(rpm) && rpm > 0)) throw new Error("n1 (rpm) must be > 0");
-      if (!(isFinite(torque) && torque > 0)) throw new Error("T1 (Nm) must be > 0");
-      if (!(isFinite(b) && b > 0)) throw new Error("b (mm) must be > 0");
+      if (!(isFinite(rpm) && rpm > 0)) throw new Error("n₁ must be > 0.");
+      if (!(isFinite(torque) && torque > 0)) throw new Error("T₁ must be > 0.");
+      if (!(isFinite(b) && b > 0)) throw new Error("b must be > 0.");
 
-      const base = computeInvoluteBundle({m,z1,z2,alphaDeg,Ck,Cf,N});
+      const base = computeInvoluteLOAandProfile({m,z1,z2,alphaRad,Ck,Cf,N});
       const contact = computeContactMetrics(base);
-      const load = loadSharingApprox({base, contact, rpm, torque});
-      const extra = { rpm, torque, b };
+
+      let xrRack = base.xrLOA.slice();
+      let yrRack = base.yrLOA.slice();
+      if (yrRack[yrRack.length-1] > yrRack[0]){ xrRack.reverse(); yrRack.reverse(); }
+
+      const cdel = 0.0;
+      const phir_new = deg2rad(75);
+      const offset = 0.9;
+      const rc_target = (isFinite(rc) && rc > 0) ? rc : (0.1*m);
+
+      const fil1 = rack_fillet_v2(m, z1, xrRack, yrRack, Cf, cdel, rc_target, phir_new, offset);
+
+      const x_pin = base.xPP.slice();
+      const y_pin = base.yPP.map(v => v + base.ro1);
+
+      const to = m*Math.PI;
+      const So = to*0.495;
+      const rot1 = -0.5*So/base.ro1;
+
+      const xR1 = [], yR1 = [];
+      for (let i=0;i<x_pin.length;i++){
+        const [xx,yy] = rotateXY(x_pin[i], y_pin[i], rot1);
+        xR1.push(xx); yR1.push(yy);
+      }
+
+      const xTr1 = [], yTr1 = [];
+      for (let i=0;i<fil1.x_pin_tr.length;i++){
+        const [xx,yy] = rotateXY(fil1.x_pin_tr[i], fil1.y_pin_tr[i], rot1);
+        xTr1.push(xx); yTr1.push(yy);
+      }
+
+      let x_in1 = xR1.slice(), y_in1 = yR1.slice();
+      const r_in1 = x_in1.map((vx,i)=> Math.hypot(vx,y_in1[i]));
+      if (r_in1[0] < r_in1[r_in1.length-1]){ x_in1.reverse(); y_in1.reverse(); }
+
+      let xtr_in1 = xTr1.slice(), ytr_in1 = yTr1.slice();
+      const r_tr1 = xtr_in1.map((vx,i)=> Math.hypot(vx,ytr_in1[i]));
+      if (r_tr1[r_tr1.length-1] > r_tr1[0]){ xtr_in1.reverse(); ytr_in1.reverse(); }
+
+      const bridged1 = prepend_connector_if_needed(x_in1, y_in1, xtr_in1, ytr_in1, 25);
+      xtr_in1 = bridged1.xtr; ytr_in1 = bridged1.ytr;
+
+      const gg1 = gear_generator(x_in1, y_in1, xtr_in1, ytr_in1, z1);
+
+      const order = ["rootL","troL","invL","add","invR","troR","rootR"];
+      const x_tooth1 = [], y_tooth1 = [];
+      for (const k of order){
+        const P = gg1.seg[k] || [];
+        for (const p of P){ x_tooth1.push(p[0]); y_tooth1.push(p[1]); }
+      }
+
+      const fil2 = rack_fillet_v2(m, z2, xrRack, yrRack, Cf, cdel, rc_target, phir_new, offset);
+
+      const flank2 = mapRackFlankToGear(xrRack, yrRack, alphaRad, base.ro2);
+      const rot2 = -0.5*So/base.ro2;
+
+      const xR2 = [], yR2 = [];
+      for (let i=0;i<flank2.x.length;i++){
+        const [xx,yy] = rotateXY(flank2.x[i], flank2.y[i], rot2);
+        xR2.push(xx); yR2.push(yy);
+      }
+
+      const xTr2 = [], yTr2 = [];
+      for (let i=0;i<fil2.x_pin_tr.length;i++){
+        const [xx,yy] = rotateXY(fil2.x_pin_tr[i], fil2.y_pin_tr[i], rot2);
+        xTr2.push(xx); yTr2.push(yy);
+      }
+
+      let x_in2 = xR2.slice(), y_in2 = yR2.slice();
+      const r_in2 = x_in2.map((vx,i)=> Math.hypot(vx,y_in2[i]));
+      if (r_in2[0] < r_in2[r_in2.length-1]){ x_in2.reverse(); y_in2.reverse(); }
+
+      let xtr_in2 = xTr2.slice(), ytr_in2 = yTr2.slice();
+      const r_tr2 = xtr_in2.map((vx,i)=> Math.hypot(vx,ytr_in2[i]));
+      if (r_tr2[r_tr2.length-1] > r_tr2[0]){ xtr_in2.reverse(); ytr_in2.reverse(); }
+
+      const bridged2 = prepend_connector_if_needed(x_in2, y_in2, xtr_in2, ytr_in2, 25);
+      xtr_in2 = bridged2.xtr; ytr_in2 = bridged2.ytr;
+
+      const gg2 = gear_generator(x_in2, y_in2, xtr_in2, ytr_in2, z2);
+
+      const x_tooth2 = [], y_tooth2 = [];
+      for (const k of order){
+        const P = gg2.seg[k] || [];
+        for (const p of P){ x_tooth2.push(p[0]); y_tooth2.push(p[1]); }
+      }
 
       state.base = base;
       state.contact = contact;
-      state.load = load;
-      state.extra = extra;
 
-      updateAllPages();
+      state.lastProfilePP = { x_pp: base.xPP.slice(), y_pp: base.yPP.slice() };
+
+      state.pinionTooth = { x_tooth: x_tooth1, y_tooth: y_tooth1 };
+      state.pinionFull  = { x_tot: gg1.x_tot, y_tot: gg1.y_tot };
+      state.pinionSeg   = gg1.seg;
+
+      state.gearTooth = { x_tooth: x_tooth2, y_tooth: y_tooth2 };
+      state.gearFull  = { x_tot: gg2.x_tot, y_tot: gg2.y_tot };
+
+      if (ui.agmaAutoJ.checked) autoComputeJBoth();
+      if (ui.agmaAutoI.checked) autoComputeI();
+      state.agma = computeAGMAAll();
+
+      updateAllUI();
       redrawCurrentPage();
-
-      if (contact.eps_LOA <= 1 + 1e-9){
-        setStatus("warn",
-          `Computed successfully, but <span class="mono">εα = ${fmt(contact.eps_LOA,6)}</span> ≤ 1. ` +
-          `Load-sharing page uses single-pair fallback (<span class="mono">R_M = 1</span>).`
-        );
-      } else {
-        setStatus("ok",
-          `Computed analytical pages. ` +
-          `<span class="mono">εα(LOA) = ${fmt(contact.eps_LOA,6)}</span>, ` +
-          `<span class="mono">εα(arcs) = ${fmt(contact.eps_arcs,6)}</span>.`
-        );
-      }
 
     } catch(err){
       console.error(err);
-      state.base = state.contact = state.load = state.extra = null;
-      updateAllPages();
+
+      state.base = null;
+      state.contact = null;
+      state.lastProfilePP = null;
+      state.pinionTooth = null;
+      state.pinionFull = null;
+      state.pinionSeg = null;
+      state.gearTooth = null;
+      state.gearFull = null;
+      state.agma = null;
+
+      updateAllUI();
       redrawCurrentPage();
-      setStatus("bad", `Error: <span class="mono">${escapeHtml(String(err.message || err))}</span>`);
+
+      showErr(ui.errBox, 'Error: <span class="mono">'+String(err.message || err)+'</span>');
     }
   }
 
-  // ---------------------------
-  // STE page helpers
-  // ---------------------------
-  function steRefs(){ return refs["pageSTE"] || null; }
-
-  function resetSTEInputs(){
-    const r = steRefs(); if (!r) return;
-    r.x_vals_pop.value = 1000;
-    r.sy.value = 1000;
-    r.Z1.value = 50;
-    r.Z2.value = 50;
-    r.Cc1.value = 0.15;
-    r.Cc2.value = 0.15;
-    r.Ck1.value = 1;
-    r.Ck2.value = 1;
-    r.Cf1.value = 1;
-    r.Cf2.value = 1;
-    r.a0_deg.value = 20;
-    r.Cs1.value = 0.49;
-    r.Cs2.value = 0.49;
-    r.E_to_sy.value = 200;
-    r.ni.value = 0.3;
-    r.log_Tmid_to_max.value = -0.5;
-    r.b_to_m.value = 30;
-    r.da12_to_m.value = 0;
-    r.m.value = 3;
-    r.debug.checked = false;
-    r.plotMode.value = "both";
-    setStatus("", "STE inputs reset to backend defaults.");
-  }
-
-  function fillSteFromShared(){
-    const r = steRefs(); if (!r) return;
-
-    const m = parseFloat(ui.m.value);
-    const z1 = parseInt(ui.z1.value,10);
-    const z2 = parseInt(ui.z2.value,10);
-    const alpha = parseFloat(ui.alpha.value);
-    const Ck = parseFloat(ui.Ck.value);
-    const Cf = parseFloat(ui.Cf.value);
-    const b = parseFloat(ui.b.value);
-
-    if (isFinite(z1)) r.Z1.value = z1;
-    if (isFinite(z2)) r.Z2.value = z2;
-    if (isFinite(m)) r.m.value = m;
-    if (isFinite(alpha)) r.a0_deg.value = alpha;
-    if (isFinite(Ck)){ r.Ck1.value = Ck; r.Ck2.value = Ck; }
-    if (isFinite(Cf)){ r.Cf1.value = Cf; r.Cf2.value = Cf; }
-    if (isFinite(b) && isFinite(m) && m > 0) r.b_to_m.value = (b/m).toFixed(4).replace(/0+$/,"").replace(/\.$/,"");
-
-    setStatus("ok", "STE inputs synced from shared geometry/operating values.");
-  }
-
-  function buildStePayload(){
-    const r = steRefs(); if (!r) throw new Error("STE page refs unavailable");
-    const payload = {
-      x_vals_pop: parseInt(r.x_vals_pop.value,10),
-      sy: parseFloat(r.sy.value),
-      Z1: parseInt(r.Z1.value,10),
-      Z2: parseInt(r.Z2.value,10),
-      Cc1: parseFloat(r.Cc1.value),
-      Cc2: parseFloat(r.Cc2.value),
-      Ck1: parseFloat(r.Ck1.value),
-      Ck2: parseFloat(r.Ck2.value),
-      Cf1: parseFloat(r.Cf1.value),
-      Cf2: parseFloat(r.Cf2.value),
-      a0_deg: parseFloat(r.a0_deg.value),
-      Cs1: parseFloat(r.Cs1.value),
-      Cs2: parseFloat(r.Cs2.value),
-      E_to_sy: parseFloat(r.E_to_sy.value),
-      ni: parseFloat(r.ni.value),
-      log_Tmid_to_max: parseFloat(r.log_Tmid_to_max.value),
-      b_to_m: parseFloat(r.b_to_m.value),
-      da12_to_m: parseFloat(r.da12_to_m.value),
-      m: parseFloat(r.m.value),
-      debug: !!r.debug.checked
-    };
-
-    // basic validation
-    for (const [k,v] of Object.entries(payload)){
-      if (k === "debug") continue;
-      if (!Number.isFinite(v)) throw new Error(`STE request field '${k}' is not a finite number`);
+  function setActivePage(key){
+    state.activePage = key;
+    for (const [k,node] of Object.entries(ui.pages)){
+      node.classList.toggle("active", k === key);
     }
-    return payload;
-  }
-
-  async function runSTERequest(){
-    const r = steRefs(); if (!r) return;
-    try{
-      const apiBase = String(ui.apiBase.value || "").replace(/\/+$/,"");
-      if (!apiBase) throw new Error("API base URL is empty");
-      const payload = buildStePayload();
-
-      setStatus("", `Running STE request to <span class="mono">${escapeHtml(apiBase + "/api/ste")}</span> ...`);
-      r.run.disabled = true;
-
-      const {data, dtMs} = await postJSON(apiBase + "/api/ste", payload);
-
-      state.steReq = payload;
-      state.ste = { data, dtMs };
-
-      // sanity check
-      if (!data || !Array.isArray(data.x_vals)){
-        throw new Error("Invalid /api/ste response: missing x_vals array");
-      }
-
-      redrawCurrentPage();
-      setStatus("ok", `STE request completed. <span class="mono">${fmt(dtMs,1)} ms</span> (frontend timing).`);
-
-    } catch(err){
-      console.error(err);
-      setStatus("bad", `STE request failed: <span class="mono">${escapeHtml(String(err.message || err))}</span>`);
-    } finally {
-      if (r) r.run.disabled = false;
-    }
-  }
-
-  async function checkHealth(){
-    try{
-      const apiBase = String(ui.apiBase.value || "").replace(/\/+$/,"");
-      if (!apiBase) throw new Error("API base URL is empty");
-      setApiStatus("", "Checking /health ...");
-      const data = await getJSON(apiBase + "/health");
-      setApiStatus("ok",
-        `Health OK. <span class="mono">ok=${String(data.ok)}</span> · ` +
-        `<span class="mono">python=${escapeHtml(String(data.python || "—"))}</span>`
-      );
-    } catch(err){
-      console.error(err);
-      setApiStatus("bad", `Health check failed: <span class="mono">${escapeHtml(String(err.message || err))}</span>`);
-    }
-  }
-
-  function exportSteCSV(){
-    if (!state.ste?.data){
-      setStatus("warn", "No STE response to export. Run /api/ste first.");
-      return;
-    }
-    const d = state.ste.data;
-    const x = Array.isArray(d.x_vals) ? d.x_vals : [];
-    const bar = Array.isArray(d.STE_bar) ? d.STE_bar : [];
-    const phi2 = Array.isArray(d.STE_phi_2) ? d.STE_phi_2 : [];
-    const G = Array.isArray(d.G) ? d.G : [];
-
-    const n = Math.max(x.length, bar.length, phi2.length, G.length);
-    const rows = [["idx","x_vals","STE_bar","STE_phi_2","G"]];
-    for (let i=0;i<n;i++){
-      rows.push([
-        String(i+1),
-        x[i] ?? "",
-        bar[i] ?? "",
-        phi2[i] ?? "",
-        G[i] ?? ""
-      ]);
-    }
-    downloadCSV("ste_response_curves.csv", rows);
-    setStatus("ok", "Exported STE response curves CSV.");
-  }
-
-  // ---------------------------
-  // CSV exports (analytical pages)
-  // ---------------------------
-  function exportLOACSV(){
-    if (!state.base){ setStatus("warn", "Compute analytical pages first."); return; }
-    const b = state.base;
-    const rows = [["idx","x_LOA_mm","y_LOA_mm","theta_pinion_rad"]];
-    for(let i=0;i<b.xLOA.length;i++){
-      rows.push([String(i+1), String(b.xLOA[i]), String(b.yLOA[i]), String(b.thLOA[i])]);
-    }
-    downloadCSV("working_LOA.csv", rows);
-    setStatus("ok", "Exported LOA CSV.");
-  }
-  function exportCPCSV(){
-    if (!state.base){ setStatus("warn", "Compute analytical pages first."); return; }
-    const b = state.base;
-    const rows = [["idx","x_cp_mm","y_cp_mm","inside_working_mask"]];
-    for(let i=0;i<b.xcp.length;i++){
-      rows.push([String(i+1), String(b.xcp[i]), String(b.ycp[i]), b.mask[i] ? "1" : "0"]);
-    }
-    downloadCSV("raw_contact_path.csv", rows);
-    setStatus("ok", "Exported raw CP CSV.");
-  }
-  function exportProfileCSV(){
-    if (!state.base){ setStatus("warn", "Compute analytical pages first."); return; }
-    const b = state.base;
-    const rows = [["idx","x_profile_pp_mm","y_profile_pp_mm"]];
-    for(let i=0;i<b.xPP.length;i++){
-      rows.push([String(i+1), String(b.xPP[i]), String(b.yPP[i])]);
-    }
-    downloadCSV("pinion_working_profile_pp.csv", rows);
-    setStatus("ok", "Exported working profile CSV.");
-  }
-  function exportLoadCSV(){
-    if (!state.load || !state.contact){ setStatus("warn", "Compute analytical pages first."); return; }
-    const ld = state.load, ct = state.contact;
-    const n = Math.max(ld.psi.length, ld.R_M.length, ld.F_n_shared.length, ct.theta_pinion_LOA.length, ct.s_from_pitch.length);
-    const rows = [["idx","theta_pinion_LOA_rad","s_from_pitch_mm","psi","R_M","F_n_shared_N"]];
-    for(let i=0;i<n;i++){
-      rows.push([
-        String(i+1),
-        ct.theta_pinion_LOA[i] ?? "",
-        ct.s_from_pitch[i] ?? "",
-        ld.psi[i] ?? "",
-        ld.R_M[i] ?? "",
-        ld.F_n_shared[i] ?? ""
-      ]);
-    }
-    downloadCSV("load_sharing.csv", rows);
-    setStatus("ok", "Exported load-sharing CSV.");
-  }
-
-  // ---------------------------
-  // Global wiring
-  // ---------------------------
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#39;");
-  }
-
-  function bindGlobal(){
-    ui.btnCompute.addEventListener("click", computeAnalytical);
-    ui.btnRedraw.addEventListener("click", redrawCurrentPage);
-
-    ui.navPages.addEventListener("click", (e) => {
-      const btn = e.target.closest(".navbtn");
-      if (!btn) return;
-      setActivePage(btn.dataset.page);
+    ui.navPages.querySelectorAll(".navbtn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.page === key);
     });
-
-    ui.btnHealth.addEventListener("click", checkHealth);
-    ui.btnSyncSteFromShared.addEventListener("click", fillSteFromShared);
-
-    [
-      ui.showCircles, ui.showLOA, ui.showCP,
-      ui.loadXAxis, ui.loadYAxis, ui.loadMarkers
-    ].forEach(node => node.addEventListener("change", redrawCurrentPage));
-
-    window.addEventListener("resize", redrawCurrentPage);
+    redrawCurrentPage();
   }
+
+  function redrawCurrentPage(){
+    if (state.activePage === "geometry"){
+      drawGeometryDual();
+      drawMeshView();
+    } else if (state.activePage === "agma"){
+      drawAGMADiagrams();
+    }
+  }
+
+  function setZoom(z){
+    state.view.zoom = clamp(z, 0.60, 12.00);
+    ui.zoom.value = String(state.view.zoom.toFixed(2));
+    ui.zoomTxt.textContent = state.view.zoom.toFixed(2) + "×";
+  }
+
+  ui.zoom.addEventListener("input", () => {
+    setZoom(parseFloat(ui.zoom.value));
+    if (state.activePage === "geometry") drawMeshView();
+  });
+
+  ui.btnResetView.addEventListener("click", () => {
+    state.view.panX = 0;
+    state.view.panY = 0;
+    setZoom(1.0);
+    if (state.activePage === "geometry") drawMeshView();
+  });
+
+  ui.cvMesh.addEventListener("mousedown", (e) => {
+    state.drag.on = true;
+    state.drag.x0 = e.clientX;
+    state.drag.y0 = e.clientY;
+    state.drag.panX0 = state.view.panX;
+    state.drag.panY0 = state.view.panY;
+  });
+  window.addEventListener("mouseup", () => { state.drag.on = false; });
+  window.addEventListener("mousemove", (e) => {
+    if (!state.drag.on) return;
+    const dx = e.clientX - state.drag.x0;
+    const dy = e.clientY - state.drag.y0;
+    state.view.panX = state.drag.panX0 + dx;
+    state.view.panY = state.drag.panY0 + dy;
+    if (state.activePage === "geometry") drawMeshView();
+  });
+
+  ui.cvMesh.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const dir = Math.sign(e.deltaY || 0);
+    const factor = (dir > 0) ? (1/1.12) : (1.12);
+    setZoom(state.view.zoom * factor);
+    if (state.activePage === "geometry") drawMeshView();
+  }, {passive:false});
+
+  ui.btnCompute.addEventListener("click", computeAll);
+  ui.btnRedraw.addEventListener("click", redrawCurrentPage);
+
+  ui.navPages.addEventListener("click", (e) => {
+    const btn = e.target.closest(".navbtn");
+    if (!btn) return;
+    const key = btn.dataset.page;
+    if (key && ui.pages[key]) setActivePage(key);
+  });
+
+  [ui.showGear, ui.showLOA].forEach(node => node.addEventListener("change", () => redrawCurrentPage()));
+
+  ui.btnCSV_Profile.addEventListener("click", exportProfileCSV);
+  ui.btnCSV_Tooth.addEventListener("click", exportToothCSV);
+  ui.btnCSV_Gear.addEventListener("click", exportGearCSV);
+  ui.btnCSV_Segment.addEventListener("click", exportSegmentCSV);
+
+  ui.agmaMat.addEventListener("change", () => { applyMaterialPreset(); tryRecalcAGMA(); });
+  ui.agmaAutoJ.addEventListener("change", () => { if (ui.agmaAutoJ.checked) autoComputeJBoth(); tryRecalcAGMA(); });
+  ui.agmaAutoI.addEventListener("change", () => { if (ui.agmaAutoI.checked) autoComputeI(); tryRecalcAGMA(); });
+  ui.agmaMN.addEventListener("change", () => { if (ui.agmaAutoI.checked) autoComputeI(); tryRecalcAGMA(); });
+
+  ui.btnAGMARecalc.addEventListener("click", () => tryRecalcAGMA());
+
+  ui.btnAGMAReset.addEventListener("click", () => {
+    ui.agmaKo.value = "1.00";
+    ui.agmaKv.value = "1.10";
+    ui.agmaKs.value = "1.00";
+    ui.agmaKH.value = "1.30";
+    ui.agmaKB.value = "1.00";
+    ui.agmaMN.value = "1.00";
+    ui.agmaZR.value = "1.00";
+
+    ui.agmaYN.value = "1.00";
+    ui.agmaZN.value = "1.00";
+    ui.agmaYT.value = "1.00";
+    ui.agmaYZ.value = "1.00";
+    ui.agmaZW.value = "1.00";
+    ui.agmaSF.value = "1.50";
+    ui.agmaSH.value = "1.50";
+
+    ui.agmaAutoJ.checked = true;
+    ui.agmaAutoI.checked = true;
+
+    ui.agmaMat.value = "steel250";
+    applyMaterialPreset();
+
+    tryRecalcAGMA();
+  });
+
+  [
+    ui.agmaJ1, ui.agmaJ2, ui.agmaI, ui.agmaZR,
+    ui.agmaKo, ui.agmaKv, ui.agmaKs, ui.agmaKH, ui.agmaKB, ui.agmaMN,
+    ui.agmaSt, ui.agmaSc, ui.agmaE, ui.agmaNu,
+    ui.agmaYN, ui.agmaZN, ui.agmaYT, ui.agmaYZ, ui.agmaZW, ui.agmaSF, ui.agmaSH
+  ].forEach(inp => inp.addEventListener("input", () => tryRecalcAGMA()));
+
+  function tryRecalcAGMA(){
+    showErr(ui.agmaErr, "");
+    try{
+      if (!state.base){
+        state.agma = null;
+        updateAllUI();
+        return;
+      }
+      if (ui.agmaAutoJ.checked) autoComputeJBoth();
+      if (ui.agmaAutoI.checked) autoComputeI();
+      state.agma = computeAGMAAll();
+      updateAllUI();
+      if (state.activePage === "agma") drawAGMADiagrams();
+    } catch(err){
+      state.agma = null;
+      updateAllUI();
+      showErr(ui.agmaErr, 'AGMA error: <span class="mono">'+String(err.message || err)+'</span>');
+    }
+  }
+
+  window.addEventListener("resize", () => redrawCurrentPage());
 
   function init(){
-    buildPages();
-    bindGlobal();
-    updateAllPages();
-    setActivePage("pageGeom");
-    resetSTEInputs();
-    setStatus("", "Ready. Run analytical compute and/or NN-based STE via /api/ste.");
+    applyMaterialPreset();
+    setExportsEnabled(false);
+    setZoom(1.0);
+    updateAllUI();
+    setActivePage("geometry");
+    showErr(ui.errBox, "");
   }
-
   init();
+
 })();
 </script>
+
 </body>
 </html>
