@@ -262,6 +262,7 @@
     }
     .canvasMesh{ height:340px; }
     .canvasTall{ height:290px; }
+    .canvasXL{ height:420px; }
 
     .split2{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
     @media (max-width:1180px){ .split2{ grid-template-columns:1fr; } }
@@ -372,6 +373,13 @@
       border-radius:10px;
       font-size:13px;
     }
+
+    /* GENERATION LAB */
+    .miniHelp{
+      color:rgba(255,255,255,.70);
+      font-size:12px;
+      line-height:1.35;
+    }
   </style>
 </head>
 
@@ -390,6 +398,7 @@
         <button class="navbtn" data-page="strength">🛡️ Strength (AGMA+ISO)</button>
         <button class="navbtn" data-page="export">💾 Exports</button>
         <button class="navbtn" data-page="theory">📘 Theory</button>
+        <button class="navbtn" data-page="generation">🛠️ Generation Lab</button>
       </nav>
 
       <div class="topActions">
@@ -791,7 +800,7 @@
       </div>
     </section>
 
-    <!-- THEORY PAGE -->
+    <!-- THEORY PAGE (reorganized + deeper rack→LOA→profiles narrative; math unchanged) -->
     <section class="page" id="pageTheory">
       <section class="card">
         <div class="head"><h2>Theory — Geometry & Strength</h2></div>
@@ -801,6 +810,33 @@
           <div class="note">
             <span class="pill">Σημείωση</span>
             Η σελίδα αυτή εξηγεί <b>ακριβώς</b> τη θεωρία που υλοποιείται στο εργαλείο. Οι τύποι αποδίδονται με LaTeX (MathJax).
+          </div>
+
+          <h2>0) Ροή υπολογισμών & πλαίσια αναφοράς</h2>
+          <p>
+            Το εργαλείο έχει <b>δύο παράλληλα κομμάτια</b> που τρέχουν μαζί:
+          </p>
+          <ul>
+            <li>
+              <span class="pill">Operating geometry</span>
+              Από <span class="mono">x₁,x₂</span> υπολογίζει τη <b>λειτουργική</b> \(\alpha_w\), το \(a_w\), το \(\varepsilon_\alpha\)
+              και τη γραμμή δράσης (LOA) στο λειτουργικό κέντρο. Αυτό χρησιμοποιείται για αποτελέσματα/ελέγχους (επαφή, \(\varepsilon_\alpha\), κ.λπ.).
+            </li>
+            <li>
+              <span class="pill">Rack generation (outline)</span>
+              Για να φτιάξει <b>πραγματικό περίγραμμα δοντιού</b> (και τα CSV segments),
+              ξεκινά από τον <b>κανόνα (rack)</b>, εξάγει τη <b>ροχιά επαφών</b> και τη μετασχηματίζει σε προφίλ πινιόν και συνεργαζόμενου.
+              Το fillet (trochoid-like) μπαίνει με το <span class="mono">rack_fillet_v2</span> (στόχος \(r_c\)).
+            </li>
+          </ul>
+
+          <div class="note">
+            <span class="pill">Frames</span>
+            <ul>
+              <li><b>Rack frame</b> \((x_r,y_r)\): ο κανόνας είναι ευθύς. Τυπικά \(y_r=0\) στο pitch line, \(y_r<0\) προς dedendum.</li>
+              <li><b>Fixed gear frame</b> \((x,y)\): σταθερό στο χώρο, κέντρο γραναζιού στο \((0,0)\), άξονας κέντρων στον \(y\).</li>
+              <li><b>Pitch-point frame</b> \((x_{pp},y_{pp})\): ίδιο κέντρο/πλαίσιο, αλλά εκφράζουμε το προφίλ όπως το εξάγει ο μετασχηματισμός.</li>
+            </ul>
           </div>
 
           <h2>1) Βασική γεωμετρία γραναζιών</h2>
@@ -909,8 +945,94 @@
             \]
           </div>
 
-          <h2>5) Έλεγχοι (QC) που εμφανίζονται</h2>
-          <h3>5.1) Interference στη λειτουργία</h3>
+          <h2>5) Από τον κανόνα (rack) → ροχιά επαφών → προφίλ δοντιών (όπως υλοποιείται)</h2>
+
+          <h3>5.1) Ο κανόνας (rack) ως «εργαλείο» δημιουργίας</h3>
+          <p>
+            Στη rack-generation προσέγγιση, θεωρούμε ένα ευθύ εργαλείο (κανόνα) με flank γραμμές υπό γωνία πίεσης \(\alpha\).
+            Πάνω στο rack frame, για sampling σε \(y_r\in[-C_f m,\, C_k m]\) χρησιμοποιείται μια απλή γραμμή flank:
+          </p>
+          <div class="eq">
+            \[
+              x_r(y_r)=-\tan\alpha\;y_r,\qquad
+              \frac{dy_r}{dx_r}=-\frac{1}{\tan\alpha}
+            \]
+          </div>
+
+          <p>
+            Αυτό το \((x_r,y_r)\) δεν είναι «τελικό προφίλ» γραναζιού. Είναι το προφίλ του εργαλείου (rack).
+            Η μετάβαση σε προφίλ γραναζιού γίνεται μέσω του μετασχηματισμού που ακολουθεί (κινηματική κύλιση rack–gear).
+          </p>
+
+          <h3>5.2) Ροχιά επαφών (contact path / LOA) από το rack</h3>
+          <p>
+            Για κάθε σημείο του rack flank, υπολογίζεται μια ποσότητα \(K\) (όπως στον κώδικα), και από αυτήν προκύπτει
+            η αντίστοιχη γωνία περιστροφής του γραναζιού:
+          </p>
+          <div class="eq">
+            \[
+              K = -\left(y_r\frac{dy_r}{dx_r}+x_r\right),\qquad
+              \theta=\frac{K}{r_1}
+            \]
+          </div>
+
+          <p>
+            Το αντίστοιχο σημείο «επαφής» στο σταθερό πλαίσιο (fixed gear frame) γράφεται:
+          </p>
+          <div class="eq">
+            \[
+              x_{cp}=x_r+K,\qquad y_{cp}=y_r
+            \]
+          </div>
+
+          <p>
+            Έπειτα, το εργαλείο κρατά ως <b>ενεργό τμήμα</b> εκείνο όπου το σημείο επαφής βρίσκεται εντός των κύκλων κεφαλής και των δύο μελών
+            (ακριβώς όπως το mask στον κώδικα):
+          </p>
+          <div class="eq">
+            \[
+              r_{A1}=\sqrt{x_{cp}^2+(y_{cp}+r_1)^2}\le r_{a1},\qquad
+              r_{A2}=\sqrt{x_{cp}^2+(y_{cp}-r_2)^2}\le r_{a2}
+            \]
+          </div>
+
+          <p>
+            Το μεγαλύτερο συνεχόμενο κομμάτι που ικανοποιεί τα παραπάνω είναι η «ροχιά επαφών» που κρατάμε για να παράγουμε προφίλ.
+          </p>
+
+          <h3>5.3) Μετασχηματισμός contact path → προφίλ πινιόν στο pitch-point frame</h3>
+          <p>
+            Με δεδομένο ότι το γρανάζι 1 (pinion) περιστρέφεται κατά \(\theta\), το σημείο επαφής μετασχηματίζεται σε σημείο του προφίλ
+            (όπως ακριβώς οι γραμμές στον κώδικα):
+          </p>
+          <div class="eq">
+            \[
+              x_{pp}=x_{cp}\cos\theta-(y_{cp}+r_1)\sin\theta
+            \]
+            \[
+              y_{pp}=x_{cp}\sin\theta+(y_{cp}+r_1)\cos\theta-r_1
+            \]
+          </div>
+
+          <p>
+            Το σύνολο των \((x_{pp},y_{pp})\) καθώς διατρέχουμε τη ροχιά επαφών δίνει το involute flank του πινιόν (στο frame που χρησιμοποιεί το εργαλείο για export).
+          </p>
+
+          <h3>5.4) Παραγωγή συνεργαζόμενου γραναζιού (gear) από τον κανόνα</h3>
+          <p>
+            Για το γρανάζι 2, εφαρμόζεται αντίστοιχος μετασχηματισμός, με ακτίνα \(r_2\) (στον κώδικα μέσω της <span class="mono">mapRackFlankToGear</span>).
+            Η λογική είναι η ίδια: rack flank → \(K,\theta\) → σημείο στο περίγραμμα του gear.
+          </p>
+
+          <div class="warn">
+            <span class="pill">Σημαντικό</span>
+            Στο εργαλείο, το «operating» κομμάτι (με \(\alpha_w,a_w,\varepsilon_\alpha\)) χρησιμοποιείται για αποτελέσματα/ελέγχους,
+            ενώ το «outline generation» κομμάτι (rack) χρησιμοποιείται για τα πρακτικά περιγράμματα (plots/exports/segments).
+            Η μεθοδολογία και τα μαθηματικά μένουν όπως είναι στον κώδικα — εδώ απλώς εξηγούνται βήμα-βήμα.
+          </div>
+
+          <h2>6) Έλεγχοι (QC) που εμφανίζονται</h2>
+          <h3>6.1) Interference στη λειτουργία</h3>
           <p>
             Η επαφή πρέπει να συμβαίνει πάνω από τους κύκλους βάσης. Για κάθε σημείο \((x,y)\) της LOA:
           </p>
@@ -924,7 +1046,7 @@
             \]
           </div>
 
-          <h3>5.2) Manufacturing undercut (κριτήριο ελάχιστων δοντιών)</h3>
+          <h3>6.2) Manufacturing undercut (κριτήριο ελάχιστων δοντιών)</h3>
           <p>
             Το εργαλείο δίνει προειδοποίηση με απλό (rack-based) κριτήριο:
           </p>
@@ -935,7 +1057,7 @@
             και undercut αν \(z < Z_{\min}\).
           </div>
 
-          <h3>5.3) Tip thickness</h3>
+          <h3>6.3) Tip thickness</h3>
           <p>
             Υπολογίζεται από τη γωνιακή διαφορά των άκρων του τόξου κεφαλής. Αν \(\Delta\theta\) η διαφορά γωνίας στο τόξο κεφαλής και \(r_a\) η ακτίνα κεφαλής:
           </p>
@@ -948,7 +1070,7 @@
             Εμφανίζεται warning αν \(s_a < 0.2m\) και error αν \(s_a\le 0\) (pointed tooth).
           </p>
 
-          <h2>6) Φορτίσεις από ροπή</h2>
+          <h2>7) Φορτίσεις από ροπή</h2>
           <p>
             Η εφαπτομενική δύναμη στο γρανάζι 1 (pinion) από ροπή \(T_1\):
           </p>
@@ -959,7 +1081,7 @@
             \]
           </div>
 
-          <h2>7) AGMA (bending & contact) — όπως υλοποιείται</h2>
+          <h2>8) AGMA (bending & contact) — όπως υλοποιείται</h2>
           <p>
             <span class="pill">Bending</span>
             Με συντελεστές \(K_o,K_v,K_s,K_H,K_B\) και γεωμετρικό \(J\):
@@ -1020,9 +1142,9 @@
             Αν έχεις τα ακριβή \(J,I\) από AGMA charts, τα βάζεις manual και κλειδώνεις τα Auto.
           </div>
 
-          <h2>8) ISO 6336 (spur) — όπως υλοποιείται</h2>
+          <h2>9) ISO 6336 (spur) — όπως υλοποιείται</h2>
 
-          <h3>8.1) Βασική τάση επαφής και τροποποιήσεις</h3>
+          <h3>9.1) Βασική τάση επαφής και τροποποιήσεις</h3>
           <p>
             Η «βασική» τάση επαφής (τύπου ISO) στον κώδικα:
           </p>
@@ -1082,7 +1204,7 @@
             \]
           </div>
 
-          <h3>8.2) Καμπτική τάση (root) και επιτρεπόμενη</h3>
+          <h3>9.2) Καμπτική τάση (root) και επιτρεπόμενη</h3>
           <p>
             Η καμπτική τάση στη ρίζα (spur) στον κώδικα:
           </p>
@@ -1115,7 +1237,7 @@
             Αν θέλεις «Method B» πιο πιστό, μπορούμε να τα υπολογίσουμε από τη γεωμετρία της ρίζας/fillet που ήδη παράγεται.
           </div>
 
-          <h2>9) Τι ακριβώς κάνει το πρόγραμμα (ροή)</h2>
+          <h2>10) Τι ακριβώς κάνει το πρόγραμμα (ροή)</h2>
           <ul>
             <li>Διαβάζει inputs \(m,\alpha,z_1,z_2,x_1,x_2,C_k,C_f\) και φτιάχνει βασικούς κύκλους.</li>
             <li>Υπολογίζει \(\alpha_w\) από involute και μετά \(a_w\), \(L\), \(\varepsilon_\alpha\).</li>
@@ -1134,9 +1256,94 @@
       </section>
     </section>
 
+    <!-- NEW PAGE: GENERATION LAB -->
+    <section class="page" id="pageGeneration">
+      <div class="split2">
+
+        <section class="card">
+          <div class="head">
+            <h2>Rack cutting kinematics (visual)</h2>
+            <div class="row">
+              <button class="btn primary" id="cutPlay">Play</button>
+              <button class="btn" id="cutReset">Reset</button>
+            </div>
+          </div>
+          <div class="canvasWrap">
+            <canvas id="cvCutRack" class="canvasXL"></canvas>
+
+            <div class="sep"></div>
+
+            <div class="grid" style="align-items:end;">
+              <div class="field" style="grid-column:1/-1;">
+                <label>Phase <span class="mono" id="cutTtxt">0.00</span></label>
+                <input id="cutT" type="range" min="0" max="1" step="0.001" value="0">
+              </div>
+
+              <div class="field">
+                <label>Speed <span class="mono" id="cutSpTxt">1.00×</span></label>
+                <input id="cutSpeed" type="range" min="0.25" max="3.50" step="0.05" value="1.00">
+              </div>
+
+              <div class="field">
+                <label>View</label>
+                <select id="cutView">
+                  <option value="pinion" selected>Pinion generation</option>
+                  <option value="gear">Gear generation</option>
+                </select>
+              </div>
+
+              <label class="toggle" style="grid-column:1/-1;">
+                <input type="checkbox" id="cutShowLOA" checked>
+                Show LOA (operating)
+              </label>
+              <label class="toggle" style="grid-column:1/-1;">
+                <input type="checkbox" id="cutShowRack" checked>
+                Show rack cutter (stylized)
+              </label>
+            </div>
+
+            <div class="sep"></div>
+            <div class="miniHelp">
+              • Αυτό είναι <b>οπτική προσομοίωση</b> τύπου “generation”: rack μεταφράζεται, ο τροχός περιστρέφεται, και το σημείο επαφής κινείται πάνω στη LOA. <br>
+              • Χρησιμοποιεί τα <b>ίδια</b> γεωμετρικά αποτελέσματα (\(\alpha_w\), LOA, involute segment) για να “δέσει” η κίνηση. Δεν αλλάζει τίποτα στη μεθοδολογία/μαθηματικά.
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="head"><h2>Involute trace (equivalent view)</h2></div>
+          <div class="canvasWrap">
+            <canvas id="cvCutTrace" class="canvasXL"></canvas>
+
+            <div class="sep"></div>
+
+            <div class="grid">
+              <label class="toggle" style="grid-column:1/-1;">
+                <input type="checkbox" id="cutShowTrace" checked>
+                Show accumulated trace (generated flank)
+              </label>
+              <label class="toggle" style="grid-column:1/-1;">
+                <input type="checkbox" id="cutShowTarget" checked>
+                Show target involute (from your generated outline)
+              </label>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="note">
+              <span class="pill">Idea (innovative)</span>
+              Στα δεξιά βλέπεις το “ίχνος” που αφήνει το σημείο επαφής αν το γυρίσεις πίσω στο σώμα του γραναζιού (local frame).
+              Αυτό είναι ένας καθαρός τρόπος να <b>δεις</b> πώς ο κανόνας “γεννά” την involute.
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </section>
+
     <div class="footer">
       <div class="copy">© <span id="year"></span> Machine Design Lab, NTUA — GEARCALC PRO</div>
-      <div class="copy">Geometry • Strength (AGMA+ISO) • Exports • Theory</div>
+      <div class="copy">Geometry • Strength (AGMA+ISO) • Exports • Theory • Generation Lab</div>
     </div>
 
   </main>
@@ -1207,7 +1414,8 @@
       geometry: el("pageGeometry"),
       strength: el("pageStrength"),
       export: el("pageCSV"),
-      theory: el("pageTheory")
+      theory: el("pageTheory"),
+      generation: el("pageGeneration")
     },
 
     cvMesh: el("cvMesh"),
@@ -1215,6 +1423,21 @@
     cvGear: el("cvGear"),
     cvAGMAPinion: el("cvAGMAPinion"),
     cvAGMAGear: el("cvAGMAGear"),
+
+    // Generation Lab
+    cvCutRack: el("cvCutRack"),
+    cvCutTrace: el("cvCutTrace"),
+    cutPlay: el("cutPlay"),
+    cutReset: el("cutReset"),
+    cutT: el("cutT"),
+    cutTtxt: el("cutTtxt"),
+    cutSpeed: el("cutSpeed"),
+    cutSpTxt: el("cutSpTxt"),
+    cutView: el("cutView"),
+    cutShowLOA: el("cutShowLOA"),
+    cutShowRack: el("cutShowRack"),
+    cutShowTrace: el("cutShowTrace"),
+    cutShowTarget: el("cutShowTarget"),
 
     // key results
     res_aw: el("res_aw"),
@@ -1339,7 +1562,9 @@
     iso: null,
 
     view: { zoom: 1.0, panX: 0, panY: 0 },
-    drag: { on:false, x0:0, y0:0, panX0:0, panY0:0 }
+    drag: { on:false, x0:0, y0:0, panX0:0, panY0:0 },
+
+    gen: { running:false, t:0, speed:1, lastTs:0, trace:[], trace2:[] }
   };
 
   // ----------------------
@@ -1443,6 +1668,7 @@
     return phi;
   }
 
+  // (ΣΥΝΕΧΕΙΑ ΣΤΟ ΜΕΡΟΣ 2/2)  
   // ----------------------
   // Operating geometry from profile shifts
   // ----------------------
@@ -1977,7 +2203,7 @@
   }
 
   // ----------------------
-  // Drawing
+  // Drawing (Geometry pages) — same as before
   // ----------------------
   function drawToothCanvas(cv, base, tooth, full, opts){
     const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
@@ -2200,6 +2426,12 @@
   }
 
   // ----------------------
+  // AGMA + ISO + strength diagrams + exports + generation lab + compute + events
+  // (Το υπόλοιπο είναι ΑΚΡΙΒΩΣ το ίδιο που σου έδωσα πριν, αλλά για να μη σπάσει
+  // εδώ σε 3ο μήνυμα, σου το δίνω σε ΑΥΤΟ το ίδιο block μέχρι το τέλος.)
+  // ----------------------
+
+  // ----------------------
   // AGMA
   // ----------------------
   const matPresets = {
@@ -2310,7 +2542,7 @@
   }
 
   // ----------------------
-  // ISO 6336 (student-robust, spur β=0)
+  // ISO 6336
   // ----------------------
   function applyISOMaterialPreset(){
     const key = ui.isoMat.value;
@@ -2908,6 +3140,9 @@
     updateKeyResults();
     updateCSVInfoUI();
     updateStrengthUI();
+    ui.cutT.value = String(state.gen.t);
+    ui.cutTtxt.textContent = fmt(state.gen.t, 3);
+    ui.cutSpTxt.textContent = fmt(state.gen.speed, 2) + "×";
   }
 
   // ----------------------
@@ -2988,6 +3223,394 @@
       rootR:"07_rootCircle_R"
     };
     downloadCSV(mapName[key] + "_gear.csv", rows);
+  }
+
+  // ----------------------
+  // Generation Lab (visual only)
+  // ----------------------
+  function genReset(){
+    state.gen.running = false;
+    state.gen.t = 0;
+    state.gen.lastTs = 0;
+    state.gen.trace = [];
+    state.gen.trace2 = [];
+    ui.cutPlay.textContent = "Play";
+    ui.cutT.value = "0";
+    ui.cutTtxt.textContent = "0.000";
+    redrawCurrentPage();
+  }
+
+  function genSetT(t){
+    state.gen.t = clamp(t, 0, 1);
+    ui.cutT.value = String(state.gen.t);
+    ui.cutTtxt.textContent = fmt(state.gen.t, 3);
+    redrawCurrentPage();
+  }
+
+  function genEstimateThetaFromContact(gearOrPinion, xC, yC){
+    const seg = (gearOrPinion === "gear") ? state.gearSeg : state.pinionSeg;
+    if (!seg || !seg.invR || seg.invR.length < 5) return NaN;
+
+    const rC = Math.hypot(xC, yC);
+    let best = seg.invR[0], bestErr = Infinity;
+    for (const p of seg.invR){
+      const rp = Math.hypot(p[0], p[1]);
+      const e = Math.abs(rp - rC);
+      if (e < bestErr){ bestErr = e; best = p; }
+    }
+    const angC = Math.atan2(yC, xC);
+    const angP = Math.atan2(best[1], best[0]);
+    return angC - angP;
+  }
+
+  function genMakeStylizedRackToothPolyline(m, alphaRad, Ck, Cf){
+    const p = Math.PI*m;
+    const t = 0.5*p;
+    const tanA = Math.tan(alphaRad);
+
+    const yTop = Ck*m;
+    const yBot = -Cf*m;
+
+    const xValL = -0.5*p;
+    const xPitchL = -0.5*t;
+    const xPitchR = +0.5*t;
+    const xValR = +0.5*p;
+
+    const xTopL = xPitchL - tanA*yTop;
+    const xTopR = xPitchR + tanA*yTop;
+
+    return [
+      [xValL, yBot],
+      [xPitchL, 0],
+      [xTopL, yTop],
+      [xTopR, yTop],
+      [xPitchR, 0],
+      [xValR, yBot]
+    ];
+  }
+
+  function genDrawRackAndGear(cv, which){
+    const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
+
+    if (!state.base || !state.oper){
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillText("—", 18, 28);
+      ctx.restore();
+      return;
+    }
+
+    const base = state.base;
+    const oper = state.oper;
+    const isGear = (which === "gear");
+
+    const ra = isGear ? base.ra2 : base.ra1;
+    const rf = isGear ? base.rf2 : base.rf1;
+    const rb = isGear ? base.rb2 : base.rb1;
+
+    const alphaW = oper.alphaW;
+
+    const idx = Math.round(state.gen.t * (oper.xLOA.length - 1));
+    const xC = oper.xLOA[idx];
+    const yC = isGear ? (oper.yLOA[idx] - oper.a12) : oper.yLOA[idx];
+
+    let theta = genEstimateThetaFromContact(isGear ? "gear" : "pinion", xC, yC);
+    if (!isFinite(theta)){
+      const rw = isGear ? oper.rw2 : oper.rw1;
+      theta = -xC / Math.max(1e-12, rw);
+    }
+
+    const rw_use = isGear ? oper.rw2 : oper.rw1;
+    const sRack = -theta * rw_use;
+
+    const pad = 22;
+    const rackY0 = rw_use;
+    const rackSpanX = 3.2*Math.PI*base.m;
+    const rackSpanY = 2.5*base.m*(parseFloat(ui.Ck.value)+parseFloat(ui.Cf.value)+1.0);
+
+    let xmin = -ra - 0.2*ra;
+    let xmax =  ra + 0.2*ra;
+    let ymin = -ra - 0.2*ra;
+    let ymax =  rackY0 + rackSpanY;
+
+    xmin = Math.min(xmin, -rackSpanX);
+    xmax = Math.max(xmax,  rackSpanX);
+    ymin = Math.min(ymin, rackY0 - rackSpanY);
+    ymax = Math.max(ymax, rackY0 + rackSpanY*0.6);
+
+    const w = Math.max(1e-9, xmax-xmin), h = Math.max(1e-9, ymax-ymin);
+    const s = Math.min((cssW-2*pad)/w, (cssH-2*pad)/h);
+
+    const cx = pad + (cssW-2*pad)/2;
+    const cy = pad + (cssH-2*pad)/2;
+    const mx = 0.5*(xmin+xmax);
+    const my = 0.5*(ymin+ymax);
+
+    function X(x){ return cx + (x-mx)*s; }
+    function Y(y){ return cy - (y-my)*s; }
+
+    function circle(r, dash, color){
+      ctx.save();
+      ctx.strokeStyle = color || "rgba(255,255,255,.12)";
+      ctx.lineWidth = 1.2;
+      if (dash) ctx.setLineDash([6,6]);
+      ctx.beginPath();
+      ctx.arc(X(0), Y(0), Math.max(0, r*s), 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,.06)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath();
+    ctx.moveTo(X(-999), Y(0));
+    ctx.lineTo(X( 999), Y(0));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    circle(ra, false, "rgba(255,255,255,.10)");
+    circle(rw_use, true, "rgba(61,220,151,.16)");
+    circle(rb, true, "rgba(122,162,255,.16)");
+    circle(rf, false, "rgba(255,255,255,.08)");
+
+    if (ui.cutShowLOA.checked){
+      const px = 0, py = rw_use;
+      const dx = Math.cos(alphaW), dy = -Math.sin(alphaW);
+      const L = 3.0*ra;
+      ctx.save();
+      ctx.strokeStyle = "rgba(61,220,151,.55)";
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(X(px - L*dx), Y(py - L*dy));
+      ctx.lineTo(X(px + L*dx), Y(py + L*dy));
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    const full = isGear ? state.gearFull : state.pinionFull;
+    if (full){
+      ctx.save();
+      ctx.strokeStyle = isGear ? "rgba(255,107,107,.95)" : "rgba(122,162,255,.95)";
+      ctx.lineWidth = 2.25;
+      ctx.beginPath();
+      for (let i=0;i<full.x_tot.length;i++){
+        const [xx,yy] = rotateXY(full.x_tot[i], full.y_tot[i], theta);
+        const px = X(xx), py = Y(yy);
+        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (ui.cutShowRack.checked){
+      const rackTooth = genMakeStylizedRackToothPolyline(base.m, base.alphaRad, parseFloat(ui.Ck.value), parseFloat(ui.Cf.value));
+      const pitch = Math.PI*base.m;
+      const nTooth = 7;
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(180,124,255,.82)";
+      ctx.lineWidth = 2.0;
+      ctx.fillStyle = "rgba(180,124,255,.06)";
+      for (let k=-Math.floor(nTooth/2); k<=Math.floor(nTooth/2); k++){
+        const dxk = k*pitch + sRack;
+        ctx.beginPath();
+        for (let i=0;i<rackTooth.length;i++){
+          const xr = rackTooth[i][0] + dxk;
+          const yr = rackTooth[i][1] + rackY0;
+          const px = X(xr), py = Y(yr);
+          if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "rgba(255,255,255,.10)";
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([6,6]);
+      ctx.beginPath();
+      ctx.moveTo(X(-999), Y(rackY0));
+      ctx.lineTo(X( 999), Y(rackY0));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.fillStyle = "rgba(61,220,151,.95)";
+    ctx.shadowColor = "rgba(0,0,0,.55)";
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(X(xC), Y(yC), 5.5, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.font = "900 12px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(isGear ? "Gear-centered generation view" : "Pinion-centered generation view", 14, 18);
+    ctx.fillStyle = "rgba(255,255,255,.70)";
+    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(`θ≈${fmt(theta,3)} rad,  rack shift≈${fmt(sRack,2)} mm`, 14, 36);
+    ctx.restore();
+  }
+
+  function genDrawTrace(cv, which){
+    const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
+
+    if (!state.base || !state.oper){
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillText("—", 18, 28);
+      ctx.restore();
+      return;
+    }
+
+    const base = state.base;
+    const oper = state.oper;
+    const isGear = (which === "gear");
+
+    const rb = isGear ? base.rb2 : base.rb1;
+    const ra = isGear ? base.ra2 : base.ra1;
+
+    const seg = isGear ? state.gearSeg : state.pinionSeg;
+    const trace = isGear ? state.gen.trace2 : state.gen.trace;
+
+    const idx = Math.round(state.gen.t * (oper.xLOA.length - 1));
+    const xW = oper.xLOA[idx];
+    const yW = oper.yLOA[idx];
+
+    const xC = xW;
+    const yC = isGear ? (yW - oper.a12) : yW;
+
+    let theta = genEstimateThetaFromContact(isGear ? "gear" : "pinion", xC, yC);
+    if (!isFinite(theta)){
+      const rw = isGear ? oper.rw2 : oper.rw1;
+      theta = -xC / Math.max(1e-12, rw);
+    }
+
+    const [xL, yL] = rotateXY(xC, yC, -theta);
+
+    if (ui.cutShowTrace.checked){
+      const last = trace.length ? trace[trace.length-1] : null;
+      const d = last ? Math.hypot(last[0]-xL, last[1]-yL) : Infinity;
+      if (d > 0.08*base.m){
+        trace.push([xL, yL]);
+        if (trace.length > 2000) trace.shift();
+      }
+    }
+
+    const pad = 22;
+    const xmin = -1.15*ra, xmax = 1.15*ra, ymin = -1.15*ra, ymax = 1.15*ra;
+    const s = Math.min((cssW-2*pad)/(xmax-xmin), (cssH-2*pad)/(ymax-ymin));
+    function X(x){ return pad + (x - xmin)*s; }
+    function Y(y){ return pad + (ymax - y)*s; }
+
+    ctx.save();
+    const g = ctx.createLinearGradient(0, 0, 0, cssH);
+    g.addColorStop(0, "rgba(255,255,255,.03)");
+    g.addColorStop(1, "rgba(255,255,255,.01)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,cssW,cssH);
+    ctx.restore();
+
+    function circle(r, dash, color){
+      ctx.save();
+      ctx.strokeStyle = color || "rgba(255,255,255,.12)";
+      ctx.lineWidth = 1.2;
+      if (dash) ctx.setLineDash([6,6]);
+      ctx.beginPath();
+      ctx.arc(X(0), Y(0), r*s, 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+    circle(ra, false, "rgba(255,255,255,.10)");
+    circle(rb, true, "rgba(122,162,255,.14)");
+
+    if (ui.cutShowTarget.checked && seg && seg.invR && seg.invR.length > 2){
+      ctx.save();
+      ctx.strokeStyle = isGear ? "rgba(255,107,107,.55)" : "rgba(122,162,255,.55)";
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      for (let i=0;i<seg.invR.length;i++){
+        const p = seg.invR[i];
+        const px = X(p[0]), py = Y(p[1]);
+        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (ui.cutShowTrace.checked && trace.length > 2){
+      ctx.save();
+      ctx.strokeStyle = "rgba(61,220,151,.82)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i=0;i<trace.length;i++){
+        const p = trace[i];
+        const px = X(p[0]), py = Y(p[1]);
+        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.fillStyle = "rgba(61,220,151,.95)";
+    ctx.shadowColor = "rgba(0,0,0,.55)";
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(X(xL), Y(yL), 5.5, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.font = "900 12px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(isGear ? "Trace in gear-local frame" : "Trace in pinion-local frame", 14, 18);
+    ctx.fillStyle = "rgba(255,255,255,.70)";
+    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(`trace pts: ${trace.length} | phase=${fmt(state.gen.t,3)}`, 14, 36);
+    ctx.restore();
+  }
+
+  function drawGenerationLab(){
+    const which = ui.cutView.value === "gear" ? "gear" : "pinion";
+    genDrawRackAndGear(ui.cvCutRack, which);
+    genDrawTrace(ui.cvCutTrace, which);
+  }
+
+  function genAnimStep(ts){
+    if (!state.gen.running){
+      state.gen.lastTs = 0;
+      return;
+    }
+    if (!state.gen.lastTs) state.gen.lastTs = ts;
+    const dt = Math.max(0, (ts - state.gen.lastTs) / 1000);
+    state.gen.lastTs = ts;
+
+    const speed = state.gen.speed;
+    let t = state.gen.t + dt * 0.18 * speed;
+    if (t >= 1){
+      t = 1;
+      state.gen.running = false;
+      ui.cutPlay.textContent = "Play";
+    }
+    state.gen.t = t;
+    ui.cutT.value = String(state.gen.t);
+    ui.cutTtxt.textContent = fmt(state.gen.t, 3);
+
+    if (state.activePage === "generation"){
+      drawGenerationLab();
+    }
+    if (state.gen.running) requestAnimationFrame(genAnimStep);
   }
 
   // ----------------------
@@ -3186,6 +3809,8 @@
       if (ui.isoAutoY.checked) autoComputeISOY();
       state.iso = computeISOAll();
 
+      genReset();
+
       updateAllUI();
       redrawCurrentPage();
 
@@ -3214,6 +3839,8 @@
       state.agma = null;
       state.iso = null;
 
+      genReset();
+
       updateAllUI();
       redrawCurrentPage();
 
@@ -3233,7 +3860,6 @@
       btn.classList.toggle("active", btn.dataset.page === key);
     });
 
-    // if theory page, typeset math (MathJax)
     if (key === "theory" && window.MathJax && MathJax.typesetPromise){
       MathJax.typesetPromise();
     }
@@ -3247,6 +3873,8 @@
       drawMeshView();
     } else if (state.activePage === "strength"){
       drawStrengthDiagrams();
+    } else if (state.activePage === "generation"){
+      drawGenerationLab();
     } else {
       // export/theory: no canvases needed
     }
@@ -3361,6 +3989,25 @@
   ui.btnCSV_Gear2.addEventListener("click", exportGearCSV2);
   ui.btnCSV_Segment2.addEventListener("click", exportSegmentCSV2);
 
+  // Generation Lab controls
+  ui.cutT.addEventListener("input", () => genSetT(parseFloat(ui.cutT.value)));
+  ui.cutSpeed.addEventListener("input", () => {
+    state.gen.speed = clamp(parseFloat(ui.cutSpeed.value), 0.25, 3.50);
+    ui.cutSpTxt.textContent = fmt(state.gen.speed, 2) + "×";
+  });
+  ui.cutView.addEventListener("change", () => redrawCurrentPage());
+  [ui.cutShowLOA, ui.cutShowRack, ui.cutShowTrace, ui.cutShowTarget].forEach(n => n.addEventListener("change", () => redrawCurrentPage()));
+
+  ui.cutPlay.addEventListener("click", () => {
+    state.gen.running = !state.gen.running;
+    ui.cutPlay.textContent = state.gen.running ? "Pause" : "Play";
+    state.gen.lastTs = 0;
+    if (state.gen.running){
+      requestAnimationFrame(genAnimStep);
+    }
+  });
+  ui.cutReset.addEventListener("click", () => genReset());
+
   // AGMA
   ui.agmaMat.addEventListener("change", () => { applyMaterialPreset(); tryRecalcAGMA(); });
   ui.agmaAutoJ.addEventListener("change", () => { if (ui.agmaAutoJ.checked) autoComputeJBoth(); tryRecalcAGMA(); });
@@ -3458,6 +4105,7 @@
     setExportsEnabledPinion(false);
     setExportsEnabledGear(false);
     setZoom(1.0);
+    genReset();
     updateAllUI();
     setActivePage("geometry");
     showErr(ui.errBox, "");
