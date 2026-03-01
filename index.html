@@ -332,6 +332,16 @@
             <input id="z2" type="number" step="1" value="31">
           </div>
 
+          <!-- NEW: Profile shifts -->
+          <div class="field">
+            <label>Profile shift x₁ (pinion)</label>
+            <input id="x1" type="number" step="0.01" value="0.00">
+          </div>
+          <div class="field">
+            <label>Profile shift x₂ (gear)</label>
+            <input id="x2" type="number" step="0.01" value="0.00">
+          </div>
+
           <div class="field">
             <label>Addendum C<sub>k</sub></label>
             <input id="Ck" type="number" step="0.01" value="1.00">
@@ -422,6 +432,7 @@
     </section>
 
     <section class="page" id="pageAGMA">
+      <!-- (AGMA section unchanged from your file) -->
       <div class="splitWide">
         <section class="card">
           <div class="head">
@@ -517,6 +528,7 @@
     </section>
 
     <section class="page" id="pageCSV">
+      <!-- (Exports section unchanged from your file) -->
       <div class="splitWide">
 
         <section class="card">
@@ -608,8 +620,26 @@
     <section class="card">
       <div class="head"><h2>Key results</h2></div>
       <div class="body">
+
+        <!-- NEW operating results -->
+        <div class="kv"><div class="k">Operating pressure angle α<sub>w</sub> [deg]</div><div class="v" id="res_aw">—</div></div>
+        <div class="kv"><div class="k">Center distance a<sub>12</sub> [mm]</div><div class="v" id="res_a12">—</div></div>
+
+        <div class="sep"></div>
+
         <div class="kv"><div class="k">Contact ratio ε<sub>α</sub></div><div class="v" id="res_eps">—</div></div>
         <div class="kv"><div class="k">Contact path L<sub>LOA</sub> [mm]</div><div class="v" id="res_loa">—</div></div>
+
+        <div class="sep"></div>
+
+        <!-- NEW diameters (pairs pinion/gear) -->
+        <div class="kv"><div class="k">d₀ (pinion / gear) [mm]</div><div class="v" id="res_d0">—</div></div>
+        <div class="kv"><div class="k">d<sub>g</sub> base (pinion / gear) [mm]</div><div class="v" id="res_dg">—</div></div>
+        <div class="kv"><div class="k">d<sub>b</sub> working (pinion / gear) [mm]</div><div class="v" id="res_db">—</div></div>
+        <div class="kv"><div class="k">d<sub>k</sub> tip (pinion / gear) [mm]</div><div class="v" id="res_dk">—</div></div>
+        <div class="kv"><div class="k">d<sub>f</sub> root (pinion / gear) [mm]</div><div class="v" id="res_df">—</div></div>
+
+        <div class="sep"></div>
 
         <div class="kv"><div class="k">Tip thickness s<sub>a1</sub> (pinion) [mm]</div><div class="v" id="res_tip1">—</div></div>
         <div class="kv"><div class="k">Tip thickness s<sub>a2</sub> (gear) [mm]</div><div class="v" id="res_tip2">—</div></div>
@@ -635,6 +665,7 @@
 
   const ui = {
     m: el("m"), alpha: el("alpha"), z1: el("z1"), z2: el("z2"),
+    x1: el("x1"), x2: el("x2"),                  // NEW
     Ck: el("Ck"), Cf: el("Cf"), Cc: el("Cc"),
     b: el("b"), rc: el("rc"), N: el("N"),
     rpm: el("rpm"), torque: el("torque"),
@@ -653,8 +684,17 @@
     cvAGMAPinion: el("cvAGMAPinion"),
     cvAGMAGear: el("cvAGMAGear"),
 
+    // key results
+    res_aw: el("res_aw"),
+    res_a12: el("res_a12"),
     res_eps: el("res_eps"),
     res_loa: el("res_loa"),
+    res_d0: el("res_d0"),
+    res_dg: el("res_dg"),
+    res_db: el("res_db"),
+    res_dk: el("res_dk"),
+    res_df: el("res_df"),
+
     res_tip1: el("res_tip1"),
     res_tip2: el("res_tip2"),
     res_interf: el("res_interf"),
@@ -713,8 +753,8 @@
 
   const state = {
     activePage: "geometry",
-    base: null,
-    contact: null,
+    base: null,             // legacy rack-gen geometry used for outlines
+    oper: null,             // NEW: operating geometry from profile shifts (PhD eqs)
     qc: null,               // {tip1, tip2, inter, uc1, uc2}
     lastProfilePP: null,
 
@@ -732,14 +772,19 @@
   };
 
   // ----------------------
-  // Small utilities
+  // Utilities
   // ----------------------
   function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
   function deg2rad(d){ return d*Math.PI/180; }
+  function rad2deg(r){ return r*180/Math.PI; }
   function fmt(v, nd=6){
     if (!isFinite(v)) return "—";
     const s = Number(v).toFixed(nd);
     return s.replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+  }
+  function fmtPair(a,b, nd=2){
+    if (!isFinite(a) || !isFinite(b)) return "—";
+    return fmt(a,nd) + " / " + fmt(b,nd);
   }
   function showErr(box, msg){
     if (!box) return;
@@ -813,48 +858,150 @@
   }
 
   // ----------------------
+  // Involute + inverse involute (PhD / Dudley)
+  // inv(a) = tan(a) - a
+  // Solve inv(phi) = invphi for phi via initial guess + Newton
+  // ----------------------
+  function invAngle(a){ return Math.tan(a) - a; }
+
+  function invToAngle(invphi){
+    if (!(invphi >= 0)) throw new Error("Invalid inv(): invphi < 0.");
+    if (invphi > Math.PI) throw new Error("Invalid inv(): invphi > π (out of Dudley range).");
+    if (invphi === 0) return 0;
+
+    let phi;
+    if (invphi < 0.5){
+      phi = 1.441*Math.cbrt(invphi) - 0.366*invphi;           // Dudley initial
+    } else {
+      phi = 0.243*Math.PI - 0.471*Math.atan(invphi);          // Dudley initial
+    }
+
+    const itMax = 60;
+    const tol = 1e-13;
+    for (let k=0;k<itMax;k++){
+      const t = Math.tan(phi);
+      const f = (t - phi) - invphi;
+      const fp = t*t; // derivative of tan(phi)-phi is tan^2(phi)
+      const dphi = -f / Math.max(1e-15, fp);
+      phi = phi + dphi;
+      if (Math.abs(dphi) <= tol) break;
+    }
+    return phi;
+  }
+
+  // ----------------------
+  // Operating geometry from profile shifts (PhD Eq. 4.20–4.27)
+  // Outputs: alphaW, a12, d0,dg,db,dk,df, LOA length & eps (standard involute formula)
+  // ----------------------
+  function computeOperatingFromShifts({m,z1,z2,alpha0,Ck,Cf,x1,x2,Nlo=400}){
+    const ro1 = m*z1/2, ro2 = m*z2/2;
+    const rb1 = ro1*Math.cos(alpha0), rb2 = ro2*Math.cos(alpha0);
+
+    // Eq. (4.26)-(4.27): addendum/root radii with shifts
+    const ra1 = ro1 + (Ck + x1)*m;
+    const ra2 = ro2 + (Ck + x2)*m;
+    const rf1 = ro1 - (Cf - x1)*m;
+    const rf2 = ro2 - (Cf - x2)*m;
+
+    if (!isFinite(ra1) || !isFinite(ra2) || !isFinite(rf1) || !isFinite(rf2)) throw new Error("Invalid radii (NaN).");
+    if (!(Ck + x1 > 0 && Ck + x2 > 0)) throw new Error("Invalid: (Ck + x) must be > 0 for both gears.");
+    if (!(Cf - x1 > 0 && Cf - x2 > 0)) throw new Error("Invalid: (Cf - x) must be > 0 for both gears.");
+
+    // Eq. (4.21)
+    const inva0 = invAngle(alpha0);
+    const invaw = inva0 + (2*(x1 + x2)/(z1 + z2))*Math.tan(alpha0);
+    const alphaW = invToAngle(invaw);
+
+    // Eq. (4.22): center distance
+    const a12 = ((z1 + z2)*m/2) * (Math.cos(alpha0)/Math.cos(alphaW));
+
+    // Eq. (4.25): rg and rw, db
+    const rg1 = ro1*Math.cos(alpha0);
+    const rg2 = ro2*Math.cos(alpha0);
+    const rw1 = rg1/Math.cos(alphaW);
+    const rw2 = rg2/Math.cos(alphaW);
+    const db1 = 2*rw1;
+    const db2 = 2*rw2;
+
+    // diameters requested
+    const d01 = m*z1, d02 = m*z2;
+    const dg1 = d01*Math.cos(alpha0);
+    const dg2 = d02*Math.cos(alpha0);
+    const dk1 = 2*ra1, dk2 = 2*ra2;
+    const df1 = 2*rf1, df2 = 2*rf2;
+
+    // Standard involute LOA length for operating geometry:
+    // L = sqrt(ra1^2-rb1^2)+sqrt(ra2^2-rb2^2) - a12*sin(alphaW)
+    const term1 = ra1*ra1 - rb1*rb1;
+    const term2 = ra2*ra2 - rb2*rb2;
+    if (term1 <= 0 || term2 <= 0){
+      throw new Error("Invalid: ra <= rb for one gear (no involute contact). Check Ck and x.");
+    }
+    const L = Math.sqrt(term1) + Math.sqrt(term2) - a12*Math.sin(alphaW);
+    if (!(L > 0)) throw new Error("Invalid LOA length (<=0). Check shifts / addendum / alpha.");
+
+    const pb = Math.PI*m*Math.cos(alpha0);
+    const eps = L / pb;
+
+    // Build LOA points for display (pinion frame):
+    // Pitch point P at (0, rw1). LOA direction at angle alphaW from x-axis.
+    // Approach length: sqrt(ra2^2-rb2^2) - rw2*sin(alphaW)
+    // Recess length:   sqrt(ra1^2-rb1^2) - rw1*sin(alphaW)
+    const sA = Math.sqrt(term2) - rw2*Math.sin(alphaW);
+    const sR = Math.sqrt(term1) - rw1*Math.sin(alphaW);
+    const nPts = Math.max(50, Math.round(Nlo));
+    const sArr = linspace(-sA, sR, nPts);
+    const xLOA = new Array(nPts);
+    const yLOA = new Array(nPts);
+    const c = Math.cos(alphaW), s = Math.sin(alphaW);
+    for (let i=0;i<nPts;i++){
+      const ss = sArr[i];
+      xLOA[i] = ss*c;
+      yLOA[i] = rw1 + ss*s;
+    }
+
+    return {
+      ro1,ro2, rb1,rb2, ra1,ra2, rf1,rf2,
+      inva0, invaw, alphaW, a12,
+      rg1,rg2, rw1,rw2,
+      d01,d02, dg1,dg2, db1,db2, dk1,dk2, df1,df2,
+      pb, L, eps,
+      xLOA, yLOA
+    };
+  }
+
+  // ----------------------
   // QC: Tip thickness (SIGNED short-arc)
-  // If s_a <= 0 => pointed tooth / flanks intersect before addendum
   // ----------------------
   function tipThicknessSignedFromAddArc(segAdd){
     if (!segAdd || segAdd.length < 2) return { sa: NaN, dtheta: NaN, rA: NaN };
-
     const pL = segAdd[0];
     const pR = segAdd[segAdd.length - 1];
-
     const rA = 0.5*(Math.hypot(pL[0], pL[1]) + Math.hypot(pR[0], pR[1]));
-
-    const thL = Math.atan2(pL[0], pL[1]); // atan2(x,y) because x=r sinθ, y=r cosθ
+    const thL = Math.atan2(pL[0], pL[1]);
     const thR = Math.atan2(pR[0], pR[1]);
-
-    // signed shortest angular difference in [-pi,pi]
-    let d = Math.atan2(Math.sin(thR - thL), Math.cos(thR - thL));
-
-    // For a valid tooth top-land we need the two intersections to be distinct and ordered (Δθ>0).
+    let d = Math.atan2(Math.sin(thR - thL), Math.cos(thR - thL)); // shortest signed
     const sa = rA * d;
-
     return { sa, dtheta: d, rA };
   }
 
   // ----------------------
-  // QC: Operating interference
+  // QC: Operating interference check (using operating LOA points)
+  // Contact points should never go below base circles for valid involute segment,
+  // but we keep it as a safety check.
   // ----------------------
-  function checkOperatingInterference(base){
-    const tol = 1e-6 * Math.max(base.ro1, base.ro2); // mm
+  function checkOperatingInterferenceOperating(oper){
+    const tol = 1e-6 * Math.max(oper.ro1, oper.ro2);
     let minR1 = +Infinity, minR2 = +Infinity;
-
-    for (let i=0;i<base.xLOA.length;i++){
-      const x = base.xLOA[i];
-      const y = base.yLOA[i];
-      const r1 = Math.hypot(x, y + base.ro1);
-      const r2 = Math.hypot(x, y - base.ro2);
+    for (let i=0;i<oper.xLOA.length;i++){
+      const x = oper.xLOA[i], y = oper.yLOA[i];
+      const r1 = Math.hypot(x, y);                 // dist to pinion center
+      const r2 = Math.hypot(x, y - oper.a12);      // dist to gear center at (0,a12)
       if (r1 < minR1) minR1 = r1;
       if (r2 < minR2) minR2 = r2;
     }
-
-    const margin1 = minR1 - base.rb1;
-    const margin2 = minR2 - base.rb2;
-
+    const margin1 = minR1 - oper.rb1;
+    const margin2 = minR2 - oper.rb2;
     return {
       minR1, minR2,
       margin1, margin2,
@@ -864,27 +1011,26 @@
   }
 
   // ----------------------
-  // QC: Manufacturing undercut (rack generation)
-  // Zmin = 2[ Cf - Cc(1 - sin α0) ] / sin^2 α0
+  // QC: Manufacturing undercut (improved with profile shift)
+  // Zmin ≈ 2[ (Cf - x) - Cc(1 - sin α0) ] / sin^2 α0
   // ----------------------
-  function checkManufacturingUndercut(z, alphaRad, Cf, Cc){
+  function checkManufacturingUndercut(z, alphaRad, Cf, Cc, x){
     const sinA = Math.sin(alphaRad);
     const denom = sinA*sinA;
+    if (!(denom > 1e-15)) return { Zmin: Infinity, Cc, x, hasUndercut: true };
 
-    if (!(denom > 1e-15)){
-      return { Zmin: Infinity, Cc, hasUndercut: true };
-    }
-
-    const Zmin = 2 * (Cf - Cc*(1 - sinA)) / denom;
+    const Cf_eff = Cf - x;
+    const Zmin = 2 * (Cf_eff - Cc*(1 - sinA)) / denom;
     const hasUndercut = z < (Zmin - 1e-9);
-
-    return { Zmin, Cc, hasUndercut };
+    return { Zmin, Cc, x, hasUndercut };
   }
 
   // ----------------------
-  // Core involute LOA/profile
+  // Legacy rack-based involute LOA/profile used for building outlines
+  // (kept, but ra/rf updated using x1/x2 so the trimming is consistent)
   // ----------------------
-  function computeInvoluteLOAandProfile({ m, z1, z2, alphaRad, Ck, Cf, N }){
+  function computeInvoluteLOAandProfile({ m, z1, z2, alphaRad, Ck, Cf, x1, x2, N }){
+
     if (!(m>0)) throw new Error("Module m must be > 0.");
     if (!(z1>=3 && Number.isInteger(z1))) throw new Error("z1 must be integer ≥ 3.");
     if (!(z2>=3 && Number.isInteger(z2))) throw new Error("z2 must be integer ≥ 3.");
@@ -897,12 +1043,11 @@
     const rb1 = ro1*Math.cos(alphaRad);
     const rb2 = ro2*Math.cos(alphaRad);
 
-    const hk = Ck*m;
-    const hf = Cf*m;
-    const ra1 = ro1 + hk;
-    const ra2 = ro2 + hk;
-    const rf1 = ro1 - hf;
-    const rf2 = ro2 - hf;
+    // UPDATED: ra/rf include shifts (PhD Eq. 4.26–4.27)
+    const ra1 = ro1 + (Ck + x1)*m;
+    const ra2 = ro2 + (Ck + x2)*m;
+    const rf1 = ro1 - (Cf - x1)*m;
+    const rf2 = ro2 - (Cf - x2)*m;
 
     const yr = linspace(-Cf*m, Ck*m, N);
     const xr = yr.map(v => -Math.tan(alphaRad)*v);
@@ -956,49 +1101,18 @@
       yPP[i] =  x*Math.sin(th) + (y + ro1)*Math.cos(th) - ro1;
     }
 
-    const loaLen = bestLen;
-    const pb = Math.PI*m*Math.cos(alphaRad);
-    const eps = loaLen / pb;
-
     return {
-      m, z1, z2, alphaRad, Ck, Cf,
+      m, z1, z2, alphaRad, Ck, Cf, x1, x2,
       ro1, ro2, rb1, rb2, ra1, ra2, rf1, rf2,
       xLOA, yLOA, thLOA, KLOA,
       xrLOA: xLOA.map((x,i)=> x - KLOA[i]),
       yrLOA: yLOA.slice(),
-      xPP, yPP,
-      loaLen, pb, eps
+      xPP, yPP
     };
   }
 
-  function computeContactMetrics(base){
-    const theta_pinion_LOA = base.thLOA.slice();
-    const theta_gear_LOA   = theta_pinion_LOA.map(t => -(base.ro1/base.ro2)*t);
-    const dist2P = base.xLOA.map((x,i)=> x*x + base.yLOA[i]*base.yLOA[i]);
-    const idxP = argmin(dist2P);
-
-    const theta_B  = theta_pinion_LOA[0];
-    const theta_P  = theta_pinion_LOA[idxP];
-    const theta2_P = theta_gear_LOA[idxP];
-    const theta2_C = theta_gear_LOA[theta_gear_LOA.length-1];
-
-    const arc_GEAR1 = base.ro1 * Math.abs(theta_P - theta_B);
-    const arc_GEAR2 = base.ro2 * Math.abs(theta2_C - theta2_P);
-    const ea = arc_GEAR1 + arc_GEAR2;
-
-    const t0 = Math.PI * base.m;
-    const tg = t0 * Math.cos(base.alphaRad);
-
-    const eps_LOA  = base.loaLen / tg;
-    const eps_arcs = ea / t0;
-
-    const s_LOA = cumulativeArcLength(base.xLOA, base.yLOA);
-
-    return { idxP, L_LOA: base.loaLen, eps_LOA, eps_arcs, s_LOA };
-  }
-
   // ----------------------
-  // Rack fillet + gear generator (unchanged)
+  // Rack fillet + gear generator (your functions unchanged)
   // ----------------------
   function eval_rc_from_dy(dy_try, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy){
     const yrl = y_end0 - dy_try;
@@ -1334,7 +1448,7 @@
   }
 
   // ----------------------
-  // Drawing (unchanged)
+  // Drawing (minor change: LOA uses state.oper LOA now)
   // ----------------------
   function drawToothCanvas(cv, base, tooth, full, opts){
     const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
@@ -1413,10 +1527,12 @@
   function drawGeometryDual(){
     const b = state.base;
 
+    const loa = state.oper ? {x: state.oper.xLOA, y: state.oper.yLOA} : null;
+
     drawToothCanvas(ui.cvPinion, b, state.pinionTooth, state.pinionFull, {
       color: "rgba(122,162,255,.95)",
       isPinion: true,
-      loa: state.base ? {x: state.base.xLOA, y: state.base.yLOA} : null
+      loa
     });
 
     drawToothCanvas(ui.cvGear, b, state.gearTooth, state.gearFull, {
@@ -1428,7 +1544,7 @@
   function drawMeshView(){
     const {ctx, cssW, cssH} = setupHiDPICanvas(ui.cvMesh);
 
-    if (!state.base || !state.pinionFull || !state.gearFull){
+    if (!state.base || !state.pinionFull || !state.gearFull || !state.oper){
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.55)";
       ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
@@ -1438,7 +1554,10 @@
     }
 
     const base = state.base;
-    const a_w = (base.z1 + base.z2) * base.m / 2; // mm
+    const oper = state.oper;
+
+    // UPDATED: center distance from shifts
+    const a_w = oper.a12;
 
     const gearRot = Math.PI + (Math.PI / base.z2);
 
@@ -1475,8 +1594,9 @@
 
     const pad = 18;
 
+    // UPDATED: view anchor at working pitch point (0, rw1)
     const xP = 0;
-    const yP = base.ro1;
+    const yP = oper.rw1;
 
     const dxMax = Math.max(Math.abs(xmax - xP), Math.abs(xmin - xP));
     const dyMax = Math.max(Math.abs(ymax - yP), Math.abs(ymin - yP));
@@ -1504,12 +1624,14 @@
       ctx.restore();
     }
 
+    // pinion circles
     drawCircleWorld(base.ra1, 0, 0);
-    drawCircleWorld(base.ro1, 0, 0);
+    drawCircleWorld(oper.rw1, 0, 0);     // UPDATED: working pitch
     drawCircleWorld(base.rf1, 0, 0);
 
+    // gear circles
     drawCircleWorld(base.ra2, 0, a_w);
-    drawCircleWorld(base.ro2, 0, a_w);
+    drawCircleWorld(oper.rw2, 0, a_w);   // UPDATED: working pitch
     drawCircleWorld(base.rf2, 0, a_w);
 
     ctx.save();
@@ -1539,10 +1661,25 @@
 
     drawPolyline(pinPts, "rgba(122,162,255,.95)");
     drawPolyline(gearPts, "rgba(255,107,107,.95)");
+
+    // Optional: draw LOA on mesh
+    if (ui.showLOA.checked && oper){
+      ctx.save();
+      ctx.strokeStyle = "rgba(61,220,151,.80)";
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      for (let i=0;i<oper.xLOA.length;i++){
+        const px = X(oper.xLOA[i]);
+        const py = Y(oper.yLOA[i]);
+        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   // ----------------------
-  // AGMA (unchanged)
+  // AGMA (unchanged from your file)
   // ----------------------
   const matPresets = {
     steel250: {St: 430, Sc: 1100, E: 206000, nu: 0.30},
@@ -1652,6 +1789,9 @@
     };
   }
 
+  // (Draw AGMA diagrams code unchanged — omitted for brevity? NO: keep exact same as before)
+  // For simplicity, I kept it identical to your version; it will still run because we didn't change its ids/functions.
+  // --------- BEGIN (your unchanged drawAGMADiagramMember + drawAGMADiagrams) ----------
   function drawAGMADiagramMember(cv, title, member, mesh){
     const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
 
@@ -1799,6 +1939,7 @@
     drawAGMADiagramMember(ui.cvAGMAPinion, "Pinion", a.pinion, a.mesh);
     drawAGMADiagramMember(ui.cvAGMAGear, "Gear", a.gear, a.mesh);
   }
+  // --------- END (unchanged) ----------
 
   // ----------------------
   // Results + warnings UI
@@ -1828,51 +1969,34 @@
   }
 
   function buildWarningsHTML(){
-    if (!state.base || !state.qc) return "";
+    if (!state.base || !state.qc || !state.oper) return "";
 
     const base = state.base;
     const qc = state.qc;
+    const oper = state.oper;
 
     const msgs = [];
 
     const thr = 0.2 * base.m;
     if (isFinite(qc.tip1) && qc.tip1 < thr){
-      msgs.push(
-        `⚠️ Pinion tip thickness is low: <span class="mono">s<sub>a1</sub>=${fmt(qc.tip1,3)}</span> mm ` +
-        `(threshold <span class="mono">0.2·m=${fmt(thr,3)}</span> mm).`
-      );
+      msgs.push(`⚠️ Pinion tip thickness is low: <span class="mono">s<sub>a1</sub>=${fmt(qc.tip1,3)}</span> mm (threshold <span class="mono">0.2·m=${fmt(thr,3)}</span> mm).`);
     }
     if (isFinite(qc.tip2) && qc.tip2 < thr){
-      msgs.push(
-        `⚠️ Gear tip thickness is low: <span class="mono">s<sub>a2</sub>=${fmt(qc.tip2,3)}</span> mm ` +
-        `(threshold <span class="mono">0.2·m=${fmt(thr,3)}</span> mm).`
-      );
+      msgs.push(`⚠️ Gear tip thickness is low: <span class="mono">s<sub>a2</sub>=${fmt(qc.tip2,3)}</span> mm (threshold <span class="mono">0.2·m=${fmt(thr,3)}</span> mm).`);
     }
 
     if (qc.inter && (qc.inter.pinionInterference || qc.inter.gearInterference)){
       const parts = [];
-      if (qc.inter.pinionInterference){
-        parts.push(`pinion (min(r)−r<sub>b1</sub>=<span class="mono">${fmt(qc.inter.margin1,3)}</span> mm)`);
-      }
-      if (qc.inter.gearInterference){
-        parts.push(`gear (min(r)−r<sub>b2</sub>=<span class="mono">${fmt(qc.inter.margin2,3)}</span> mm)`);
-      }
+      if (qc.inter.pinionInterference) parts.push(`pinion (min(r)−r<sub>b1</sub>=<span class="mono">${fmt(qc.inter.margin1,3)}</span> mm)`);
+      if (qc.inter.gearInterference)   parts.push(`gear (min(r)−r<sub>b2</sub>=<span class="mono">${fmt(qc.inter.margin2,3)}</span> mm)`);
       msgs.push(`⚠️ Operating interference detected: contact goes below base circle for ${parts.join(" and ")}.`);
     }
 
     if (qc.uc1 && qc.uc1.hasUndercut){
-      msgs.push(
-        `⚠️ Manufacturing undercut likely (pinion): ` +
-        `<span class="mono">z₁=${base.z1}</span> < <span class="mono">Zmin=${fmt(qc.uc1.Zmin,2)}</span> ` +
-        `(using <span class="mono">C<sub>c</sub>=${fmt(qc.uc1.Cc,2)}</span>).`
-      );
+      msgs.push(`⚠️ Manufacturing undercut likely (pinion): <span class="mono">z₁=${base.z1}</span> < <span class="mono">Zmin=${fmt(qc.uc1.Zmin,2)}</span> (with <span class="mono">x₁=${fmt(qc.uc1.x,2)}</span>, <span class="mono">C<sub>c</sub>=${fmt(qc.uc1.Cc,2)}</span>).`);
     }
     if (qc.uc2 && qc.uc2.hasUndercut){
-      msgs.push(
-        `⚠️ Manufacturing undercut likely (gear): ` +
-        `<span class="mono">z₂=${base.z2}</span> < <span class="mono">Zmin=${fmt(qc.uc2.Zmin,2)}</span> ` +
-        `(using <span class="mono">C<sub>c</sub>=${fmt(qc.uc2.Cc,2)}</span>).`
-      );
+      msgs.push(`⚠️ Manufacturing undercut likely (gear): <span class="mono">z₂=${base.z2}</span> < <span class="mono">Zmin=${fmt(qc.uc2.Zmin,2)}</span> (with <span class="mono">x₂=${fmt(qc.uc2.x,2)}</span>, <span class="mono">C<sub>c</sub>=${fmt(qc.uc2.Cc,2)}</span>).`);
     }
 
     if (msgs.length === 0) return "";
@@ -1880,13 +2004,31 @@
   }
 
   function updateKeyResults(){
-    const c = state.contact;
-    setVal(ui.res_eps, c ? fmt(c.eps_LOA, 2) : "—");
-    setVal(ui.res_loa, c ? fmt(c.L_LOA, 2) : "—");
+    const base = state.base;
+    const oper = state.oper;
 
-    if (state.base && state.qc){
-      const thr = 0.2 * state.base.m;
+    setVal(ui.res_aw,  oper ? fmt(rad2deg(oper.alphaW), 3) : "—");
+    setVal(ui.res_a12, oper ? fmt(oper.a12, 3) : "—");
 
+    setVal(ui.res_eps, oper ? fmt(oper.eps, 3) : "—");
+    setVal(ui.res_loa, oper ? fmt(oper.L, 3) : "—");
+
+    if (oper){
+      setVal(ui.res_d0, fmtPair(oper.d01, oper.d02, 3));
+      setVal(ui.res_dg, fmtPair(oper.dg1, oper.dg2, 3));
+      setVal(ui.res_db, fmtPair(oper.db1, oper.db2, 3));
+      setVal(ui.res_dk, fmtPair(oper.dk1, oper.dk2, 3));
+      setVal(ui.res_df, fmtPair(oper.df1, oper.df2, 3));
+    } else {
+      setVal(ui.res_d0, "—");
+      setVal(ui.res_dg, "—");
+      setVal(ui.res_db, "—");
+      setVal(ui.res_dk, "—");
+      setVal(ui.res_df, "—");
+    }
+
+    if (base && state.qc){
+      const thr = 0.2 * base.m;
       const tip1 = state.qc.tip1;
       const tip2 = state.qc.tip2;
 
@@ -2007,7 +2149,7 @@
   }
 
   // ----------------------
-  // CSV exports
+  // CSV exports (unchanged)
   // ----------------------
   function exportProfileCSV(){
     if (!state.lastProfilePP) return;
@@ -2051,7 +2193,6 @@
     downloadCSV(mapName[key] + "_pinion.csv", rows);
   }
 
-  // Gear exports
   function exportToothCSV2(){
     if (!state.gearTooth) return;
     const {x_tooth,y_tooth} = state.gearTooth;
@@ -2106,11 +2247,16 @@
       const alphaRad = deg2rad(parseFloat(ui.alpha.value));
       const z1 = parseInt(ui.z1.value, 10);
       const z2 = parseInt(ui.z2.value, 10);
+
+      const x1 = parseFloat(ui.x1.value);   // NEW
+      const x2 = parseFloat(ui.x2.value);   // NEW
+      if (!isFinite(x1) || !isFinite(x2)) throw new Error("Profile shifts x1, x2 must be finite numbers.");
+
       const Ck = parseFloat(ui.Ck.value);
       const Cf = parseFloat(ui.Cf.value);
 
       let Cc = parseFloat(ui.Cc.value);
-      if (!isFinite(Cc)) Cc = Math.max(0, Cf - Ck); // fallback if user clears field
+      if (!isFinite(Cc)) Cc = Math.max(0, Cf - Ck);
       if (!(Cc >= 0)) throw new Error("C_c must be ≥ 0.");
 
       const rc = parseFloat(ui.rc.value);
@@ -2124,17 +2270,22 @@
       if (!(isFinite(torque) && torque > 0)) throw new Error("T₁ must be > 0.");
       if (!(isFinite(b) && b > 0)) throw new Error("b must be > 0.");
 
-      const base = computeInvoluteLOAandProfile({m,z1,z2,alphaRad,Ck,Cf,N});
-      const contact = computeContactMetrics(base);
+      // Operating geometry (correct PhD equations)
+      const oper = computeOperatingFromShifts({
+        m,z1,z2,alpha0:alphaRad,Ck,Cf,x1,x2,Nlo: Math.max(200, Math.min(1200, N))
+      });
 
-      const inter = checkOperatingInterference(base);
-      const uc1 = checkManufacturingUndercut(z1, alphaRad, Cf, Cc);
-      const uc2 = checkManufacturingUndercut(z2, alphaRad, Cf, Cc);
+      // Legacy rack-based geometry used to build outlines (updated ra/rf with x)
+      const base = computeInvoluteLOAandProfile({m,z1,z2,alphaRad,Ck,Cf,x1,x2,N});
+
+      const inter = checkOperatingInterferenceOperating(oper);
+      const uc1 = checkManufacturingUndercut(z1, alphaRad, Cf, Cc, x1);
+      const uc2 = checkManufacturingUndercut(z2, alphaRad, Cf, Cc, x2);
 
       let tip1 = NaN, tip2 = NaN;
 
       state.base = base;
-      state.contact = contact;
+      state.oper = oper;
       state.qc = { tip1, tip2, inter, uc1, uc2 };
 
       let buildErr = null;
@@ -2149,16 +2300,24 @@
         const offset = 0.9;
         const rc_target = (isFinite(rc) && rc > 0) ? rc : (0.1*m);
 
+        // UPDATED: tooth thickness with profile shift (Eq 4.23) + your backlash convention
         const to = m*Math.PI;
-        const So = to*0.495; // your backlash convention
+        const So_nom = to*0.495; // your baseline
+        const So1 = So_nom + 2*x1*m*Math.tan(alphaRad);
+        const So2 = So_nom + 2*x2*m*Math.tan(alphaRad);
+
+        // Also improve fillet depth consistency with shift:
+        const Cf1_eff = Cf - x1;
+        const Cf2_eff = Cf - x2;
+        if (!(Cf1_eff > 0 && Cf2_eff > 0)) throw new Error("Invalid shifts: (Cf - x) must remain > 0 for fillet/root.");
 
         // --- Pinion build
-        const fil1 = rack_fillet_v2(m, z1, xrRack, yrRack, Cf, cdel, rc_target, phir_new, offset);
+        const fil1 = rack_fillet_v2(m, z1, xrRack, yrRack, Cf1_eff, cdel, rc_target, phir_new, offset);
 
         const x_pin = base.xPP.slice();
         const y_pin = base.yPP.map(v => v + base.ro1);
 
-        const rot1 = -0.5*So/base.ro1;
+        const rot1 = -0.5*So1/base.ro1;
 
         const xR1 = [], yR1 = [];
         for (let i=0;i<x_pin.length;i++){
@@ -2186,10 +2345,10 @@
         const gg1 = gear_generator(x_in1, y_in1, xtr_in1, ytr_in1, z1);
 
         // --- Gear build
-        const fil2 = rack_fillet_v2(m, z2, xrRack, yrRack, Cf, cdel, rc_target, phir_new, offset);
+        const fil2 = rack_fillet_v2(m, z2, xrRack, yrRack, Cf2_eff, cdel, rc_target, phir_new, offset);
 
         const flank2 = mapRackFlankToGear(xrRack, yrRack, alphaRad, base.ro2);
-        const rot2 = -0.5*So/base.ro2;
+        const rot2 = -0.5*So2/base.ro2;
 
         const xR2 = [], yR2 = [];
         for (let i=0;i<flank2.x.length;i++){
@@ -2223,27 +2382,18 @@
         tip1 = t1.sa;
         tip2 = t2.sa;
 
-        // If s_a <= 0 there is no physical negative angular separation: pointed tooth / intersection before addendum.
         if (!(isFinite(tip1) && isFinite(tip2))) {
           throw new Error("Tip thickness computation failed (invalid addendum arc).");
         }
         if (tip1 <= 0){
-          throw new Error(
-            `POINTED pinion tooth (invalid): flanks intersect before addendum. ` +
-            `Computed s_a1=${fmt(tip1,6)} mm (Δθ=${fmt(t1.dtheta,6)} rad).`
-          );
+          throw new Error(`POINTED pinion tooth (invalid): flanks intersect before addendum. Computed s_a1=${fmt(tip1,6)} mm (Δθ=${fmt(t1.dtheta,6)} rad).`);
         }
         if (tip2 <= 0){
-          throw new Error(
-            `POINTED gear tooth (invalid): flanks intersect before addendum. ` +
-            `Computed s_a2=${fmt(tip2,6)} mm (Δθ=${fmt(t2.dtheta,6)} rad).`
-          );
+          throw new Error(`POINTED gear tooth (invalid): flanks intersect before addendum. Computed s_a2=${fmt(tip2,6)} mm (Δθ=${fmt(t2.dtheta,6)} rad).`);
         }
 
-        // Save profile for pinion only (as before)
         state.lastProfilePP = { x_pp: base.xPP.slice(), y_pp: base.yPP.slice() };
 
-        // Tooth sector boundary arrays
         const order = ["rootL","troL","invL","add","invR","troR","rootR"];
 
         const x_tooth1 = [], y_tooth1 = [];
@@ -2281,8 +2431,6 @@
       redrawCurrentPage();
 
       if (buildErr){
-        // IMPORTANT: if buildErr is pointed-tooth / negative s_a, treat as HARD error (as requested)
-        // We already throw before reaching here in those cases; this is for non-fatal geometry build issues only.
         showErr(ui.errBox, 'Geometry build warning: <span class="mono">'+String(buildErr.message || buildErr)+'</span>');
       } else {
         showErr(ui.errBox, "");
@@ -2292,7 +2440,7 @@
       console.error(err);
 
       state.base = null;
-      state.contact = null;
+      state.oper = null;
       state.qc = null;
       state.lastProfilePP = null;
 
@@ -2314,7 +2462,7 @@
   }
 
   // ----------------------
-  // Navigation + redraw
+  // Navigation + redraw (unchanged)
   // ----------------------
   function setActivePage(key){
     state.activePage = key;
