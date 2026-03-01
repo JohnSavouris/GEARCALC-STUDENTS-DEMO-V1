@@ -1,9 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="el">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GEARCALC STUDENT — Involute Spur Gear Lab Suite (AGMA + ISO 6336)</title>
+  <title>GEARCALC PRO — Involute Spur Gear Suite (Geometry + AGMA + ISO 6336 + Theory)</title>
+
+  <!-- MathJax (LaTeX rendering) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(','\\)'], ['$', '$']],
+        displayMath: [['\\[','\\]'], ['$$','$$']],
+        processEscapes: true
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
   <style>
     :root{
@@ -108,7 +121,7 @@
       gap:12px;
       flex-wrap:wrap;
     }
-    .brandMini{ display:flex; flex-direction:column; gap:2px; min-width:220px; }
+    .brandMini{ display:flex; flex-direction:column; gap:2px; min-width:240px; }
     .brandMini .kicker{
       font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2);
       white-space:nowrap;
@@ -286,6 +299,79 @@
       border-radius:14px;
       padding:10px 12px;
     }
+
+    /* THEORY PAGE */
+    .theory{
+      padding:14px 16px;
+      line-height:1.55;
+      font-size:15px;
+      color:rgba(255,255,255,.92);
+    }
+    .theory h1{
+      margin:6px 0 10px;
+      font-size:22px;
+      letter-spacing:.01em;
+    }
+    .theory h2{
+      margin:18px 0 8px;
+      font-size:15px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+    }
+    .theory h3{
+      margin:14px 0 6px;
+      font-size:15px;
+      color:rgba(255,255,255,.92);
+    }
+    .theory p{ margin:8px 0; color:rgba(255,255,255,.86); }
+    .theory ul{ margin:8px 0 8px 20px; color:rgba(255,255,255,.86); }
+    .theory li{ margin:6px 0; }
+    .pill{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      color:rgba(255,255,255,.88);
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.02em;
+      margin-right:8px;
+      white-space:nowrap;
+    }
+    .note{
+      border:1px solid rgba(122,162,255,.35);
+      background: rgba(122,162,255,.08);
+      padding:10px 12px;
+      border-radius:14px;
+      margin:10px 0;
+      color: rgba(255,255,255,.90);
+    }
+    .warn{
+      border:1px solid rgba(255,107,107,.35);
+      background: rgba(255,107,107,.08);
+      padding:10px 12px;
+      border-radius:14px;
+      margin:10px 0;
+      color: rgba(255,255,255,.90);
+    }
+    .theory .eq{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      margin:10px 0;
+      overflow:auto;
+    }
+    .theory code.inline{
+      font-family: var(--mono);
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+      padding:2px 6px;
+      border-radius:10px;
+      font-size:13px;
+    }
   </style>
 </head>
 
@@ -296,13 +382,14 @@
     <div class="topbarInner">
       <div class="brandMini">
         <div class="kicker">Machine Design Laboratory — NTUA</div>
-        <div class="title">GEARCALC STUDENT VERSION (V1)</div>
+        <div class="title">GEARCALC PRO</div>
       </div>
 
       <nav class="navTop" id="navPages">
         <button class="navbtn active" data-page="geometry">🧩 Geometry</button>
         <button class="navbtn" data-page="strength">🛡️ Strength (AGMA+ISO)</button>
         <button class="navbtn" data-page="export">💾 Exports</button>
+        <button class="navbtn" data-page="theory">📘 Theory</button>
       </nav>
 
       <div class="topActions">
@@ -704,9 +791,352 @@
       </div>
     </section>
 
+    <!-- THEORY PAGE -->
+    <section class="page" id="pageTheory">
+      <section class="card">
+        <div class="head"><h2>Theory — Geometry & Strength</h2></div>
+        <div class="theory">
+          <h1>Θεωρία Υπολογισμών (Spur involute gears)</h1>
+
+          <div class="note">
+            <span class="pill">Σημείωση</span>
+            Η σελίδα αυτή εξηγεί <b>ακριβώς</b> τη θεωρία που υλοποιείται στο εργαλείο. Οι τύποι αποδίδονται με LaTeX (MathJax).
+          </div>
+
+          <h2>1) Βασική γεωμετρία γραναζιών</h2>
+          <p>
+            Για ευθύγραμμα οδοντωτά (spur) με module \(m\), αριθμό δοντιών \(z\) και ονομαστική γωνία πίεσης \(\alpha\):
+          </p>
+
+          <div class="eq">
+            \[
+              d = mz,\qquad r=\frac{d}{2}=\frac{mz}{2}
+            \]
+            \[
+              r_b = r\cos\alpha,\qquad d_b = d\cos\alpha
+            \]
+          </div>
+
+          <p>
+            Με συντελεστές κεφαλής/ποδός \(C_k, C_f\) και μετατόπιση προφίλ \(x\) (σε μονάδες module):
+          </p>
+          <div class="eq">
+            \[
+              r_a = r + (C_k + x)m,\qquad
+              r_f = r - (C_f - x)m
+            \]
+          </div>
+
+          <h2>2) Συνάρτηση involute και «λειτουργική» γωνία πίεσης</h2>
+          <p>
+            Ορίζουμε τη συνάρτηση involute:
+          </p>
+          <div class="eq">
+            \[
+              \operatorname{inv}(\phi)=\tan\phi-\phi
+            \]
+          </div>
+
+          <p>
+            Για ζεύγος με \(z_1,z_2\) και συνολική μετατόπιση \(x_1+x_2\), το εργαλείο υπολογίζει τη λειτουργική γωνία πίεσης \(\alpha_w\)
+            λύνοντας το:
+          </p>
+          <div class="eq">
+            \[
+              \operatorname{inv}(\alpha_w)
+              =
+              \operatorname{inv}(\alpha)
+              +
+              \frac{2(x_1+x_2)}{z_1+z_2}\tan\alpha
+            \]
+          </div>
+
+          <p>
+            (Η επίλυση γίνεται αριθμητικά με Newton–Raphson στην αντίστροφη involute.)
+          </p>
+
+          <h2>3) Λειτουργική απόσταση κέντρων και κύκλοι λειτουργίας</h2>
+          <p>
+            Η λειτουργική απόσταση κέντρων προκύπτει από την συνθήκη σταθερής βάσης:
+          </p>
+          <div class="eq">
+            \[
+              a_w = \frac{m(z_1+z_2)}{2}\,\frac{\cos\alpha}{\cos\alpha_w}
+            \]
+          </div>
+
+          <p>
+            Οι λειτουργικές ακτίνες κύλισης:
+          </p>
+          <div class="eq">
+            \[
+              r_{w1}=\frac{r_{b1}}{\cos\alpha_w},\qquad
+              r_{w2}=\frac{r_{b2}}{\cos\alpha_w}
+            \]
+          </div>
+
+          <h2>4) Μήκος γραμμής δράσης (LOA) και λόγος επαφής</h2>
+          <p>
+            Για spur, το μήκος της γραμμής δράσης:
+          </p>
+          <div class="eq">
+            \[
+              L
+              =
+              \sqrt{r_{a1}^2-r_{b1}^2}
+              +
+              \sqrt{r_{a2}^2-r_{b2}^2}
+              -
+              a_w\sin\alpha_w
+            \]
+          </div>
+
+          <p>
+            Βασικό βήμα:
+          </p>
+          <div class="eq">
+            \[
+              p_b=\pi m\cos\alpha
+            \]
+          </div>
+
+          <p>
+            Και λόγος επαφής:
+          </p>
+          <div class="eq">
+            \[
+              \varepsilon_\alpha=\frac{L}{p_b}
+            \]
+          </div>
+
+          <h2>5) Έλεγχοι (QC) που εμφανίζονται</h2>
+          <h3>5.1) Interference στη λειτουργία</h3>
+          <p>
+            Η επαφή πρέπει να συμβαίνει πάνω από τους κύκλους βάσης. Για κάθε σημείο \((x,y)\) της LOA:
+          </p>
+          <div class="eq">
+            \[
+              r_1=\sqrt{x^2+y^2},\qquad
+              r_2=\sqrt{x^2+(y-a_w)^2}
+            \]
+            \[
+              \min(r_1)\ge r_{b1},\qquad \min(r_2)\ge r_{b2}
+            \]
+          </div>
+
+          <h3>5.2) Manufacturing undercut (κριτήριο ελάχιστων δοντιών)</h3>
+          <p>
+            Το εργαλείο δίνει προειδοποίηση με απλό (rack-based) κριτήριο:
+          </p>
+          <div class="eq">
+            \[
+              Z_{\min}\approx \frac{2\left[(C_f-x)-C_c(1-\sin\alpha)\right]}{\sin^2\alpha}
+            \]
+            και undercut αν \(z < Z_{\min}\).
+          </div>
+
+          <h3>5.3) Tip thickness</h3>
+          <p>
+            Υπολογίζεται από τη γωνιακή διαφορά των άκρων του τόξου κεφαλής. Αν \(\Delta\theta\) η διαφορά γωνίας στο τόξο κεφαλής και \(r_a\) η ακτίνα κεφαλής:
+          </p>
+          <div class="eq">
+            \[
+              s_a = r_a\,\Delta\theta
+            \]
+          </div>
+          <p>
+            Εμφανίζεται warning αν \(s_a < 0.2m\) και error αν \(s_a\le 0\) (pointed tooth).
+          </p>
+
+          <h2>6) Φορτίσεις από ροπή</h2>
+          <p>
+            Η εφαπτομενική δύναμη στο γρανάζι 1 (pinion) από ροπή \(T_1\):
+          </p>
+          <div class="eq">
+            \[
+              F_t=\frac{T_1}{r_1}
+              \quad\text{(με }r_1=\frac{mz_1}{2}\text{ σε μέτρα)}
+            \]
+          </div>
+
+          <h2>7) AGMA (bending & contact) — όπως υλοποιείται</h2>
+          <p>
+            <span class="pill">Bending</span>
+            Με συντελεστές \(K_o,K_v,K_s,K_H,K_B\) και γεωμετρικό \(J\):
+          </p>
+          <div class="eq">
+            \[
+              \sigma_F =
+              \frac{F_t\,K_oK_vK_sK_HK_B}{b\,m\,J}
+            \]
+          </div>
+
+          <p>
+            Επιτρεπόμενη καμπτική τάση:
+          </p>
+          <div class="eq">
+            \[
+              \sigma_{F,\text{allow}}
+              =
+              \frac{S_t\,Y_N}{Y_T\,Y_Z\,S_F}
+            \]
+          </div>
+
+          <p>
+            <span class="pill">Contact</span>
+            Με AGMA contact geometry factor \(I\) και elastic coefficient \(Z_E\):
+          </p>
+          <div class="eq">
+            \[
+              \sigma_H
+              =
+              Z_E\sqrt{\frac{F_t\,K_oK_vK_sK_H\,Z_R}{b\,d_1\,I}}
+            \]
+          </div>
+
+          <p>
+            όπου \(d_1=mz_1\) και:
+          </p>
+          <div class="eq">
+            \[
+              Z_E=\sqrt{\frac{1}{\pi\left(\frac{2(1-\nu^2)}{E}\right)}}
+            \]
+          </div>
+
+          <p>
+            Επιτρεπόμενη επιφανειακή (pitting) τάση:
+          </p>
+          <div class="eq">
+            \[
+              \sigma_{H,\text{allow}}
+              =
+              \frac{S_c\,Z_NZ_W}{Y_T\,Y_Z\,S_H}
+            \]
+          </div>
+
+          <div class="warn">
+            <span class="pill">Σημαντικό</span>
+            Τα \(J\) και \(I\) στο UI έχουν <b>Auto</b> (προσεγγιστικά) για να δουλεύει «φοιτητικά» χωρίς πίνακες AGMA.
+            Αν έχεις τα ακριβή \(J,I\) από AGMA charts, τα βάζεις manual και κλειδώνεις τα Auto.
+          </div>
+
+          <h2>8) ISO 6336 (spur) — όπως υλοποιείται</h2>
+
+          <h3>8.1) Βασική τάση επαφής και τροποποιήσεις</h3>
+          <p>
+            Η «βασική» τάση επαφής (τύπου ISO) στον κώδικα:
+          </p>
+          <div class="eq">
+            \[
+              \sigma_{H0}
+              =
+              Z_E\,Z_H\,Z_\varepsilon\,Z_\beta\,
+              \sqrt{\frac{F_t(u+1)}{b\,d_1\,u}}
+            \]
+            όπου \(u=z_2/z_1\), \(Z_\beta=1\) για spur.
+          </div>
+
+          <p>
+            Το \(Z_H\) (spur, \(\beta=0\)) που χρησιμοποιείται:
+          </p>
+          <div class="eq">
+            \[
+              Z_H=\sqrt{\frac{2\cos\alpha_w}{\cos^2\alpha\;\sin\alpha_w}}
+            \]
+          </div>
+
+          <p>
+            Το \(Z_\varepsilon\) λαμβάνεται συντηρητικά ως \(1\) όταν \(\varepsilon_\alpha<2\) (checkbox), αλλιώς:
+          </p>
+          <div class="eq">
+            \[
+              Z_\varepsilon=\sqrt{\frac{4-\varepsilon_\alpha}{3}}
+            \]
+          </div>
+
+          <p>
+            Οι δυναμικοί/κατανομής φορτίου παράγοντες εφαρμόζονται ως:
+          </p>
+          <div class="eq">
+            \[
+              K_H=\sqrt{K_AK_vK_{H\beta}K_{H\alpha}}
+            \]
+            \[
+              \sigma_{H1}=Z_B\,\sigma_{H0}\,K_H,\qquad
+              \sigma_{H2}=Z_D\,\sigma_{H0}\,K_H
+            \]
+          </div>
+
+          <p>
+            (Τα \(Z_B,Z_D\) στο UI υπολογίζονται με απλοποιημένο spur check ώστε να είναι \(\ge 1\)).
+          </p>
+
+          <p>
+            Επιτρεπόμενη τάση επαφής:
+          </p>
+          <div class="eq">
+            \[
+              \sigma_{HP}
+              =
+              \frac{\sigma_{H,\text{lim}}\,Z_NZ_LZ_RZ_VZ_WZ_X}{S_H}
+            \]
+          </div>
+
+          <h3>8.2) Καμπτική τάση (root) και επιτρεπόμενη</h3>
+          <p>
+            Η καμπτική τάση στη ρίζα (spur) στον κώδικα:
+          </p>
+          <div class="eq">
+            \[
+              \sigma_{F0}=\frac{F_t}{b\,m}\,Y_FY_SY_\beta Y_BY_{DT}
+            \]
+            \[
+              \sigma_F=\sigma_{F0}\,(K_AK_vK_{F\beta}K_{F\alpha})
+            \]
+          </div>
+          <p>
+            Για spur: \(Y_\beta=Y_B=Y_{DT}=1\) (όπως έχει υλοποιηθεί).
+          </p>
+
+          <p>
+            Επιτρεπόμενη καμπτική τάση:
+          </p>
+          <div class="eq">
+            \[
+              \sigma_{FP}
+              =
+              \frac{\sigma_{F,\text{lim}}\,Y_{ST}Y_{NT}Y_{\delta relT}Y_{R relT}Y_X}{S_F}
+            \]
+          </div>
+
+          <div class="warn">
+            <span class="pill">Σημαντικό</span>
+            Τα \(Y_F, Y_S\) εδώ έχουν Auto (Lewis-based) για να μην χρειάζεσαι tables ISO.
+            Αν θέλεις «Method B» πιο πιστό, μπορούμε να τα υπολογίσουμε από τη γεωμετρία της ρίζας/fillet που ήδη παράγεται.
+          </div>
+
+          <h2>9) Τι ακριβώς κάνει το πρόγραμμα (ροή)</h2>
+          <ul>
+            <li>Διαβάζει inputs \(m,\alpha,z_1,z_2,x_1,x_2,C_k,C_f\) και φτιάχνει βασικούς κύκλους.</li>
+            <li>Υπολογίζει \(\alpha_w\) από involute και μετά \(a_w\), \(L\), \(\varepsilon_\alpha\).</li>
+            <li>Δημιουργεί προφίλ δοντιού με rack-generation + fillet (στόχος \(r_c\)).</li>
+            <li>Υπολογίζει tip thickness, ελέγχει pointed/low thickness, undercut και interference.</li>
+            <li>Με \(T_1\) υπολογίζει \(F_t\) και τρέχει AGMA και ISO checks.</li>
+            <li>Σχεδιάζει σχήματα και επιτρέπει CSV exports.</li>
+          </ul>
+
+          <div class="note">
+            <span class="pill">Tip</span>
+            Αν θέλεις να «δέσει» η θεωρία με τις δικές σου ονομασίες/σύμβολα της εργασίας (π.χ. όπως τα ζητάει η σχολή),
+            πες μου ποια ακριβώς notation χρησιμοποιείτε και το προσαρμόζω 1:1.
+          </div>
+        </div>
+      </section>
+    </section>
+
     <div class="footer">
       <div class="copy">© <span id="year"></span> Machine Design Lab, NTUA — GEARCALC PRO</div>
-      <div class="copy">Geometry • Strength (AGMA+ISO) • Exports</div>
+      <div class="copy">Geometry • Strength (AGMA+ISO) • Exports • Theory</div>
     </div>
 
   </main>
@@ -773,7 +1203,12 @@
     warnBox: el("warnBox"),
     agmaErr: el("agmaErr"),
     isoErr: el("isoErr"),
-    pages: { geometry: el("pageGeometry"), strength: el("pageStrength"), export: el("pageCSV") },
+    pages: {
+      geometry: el("pageGeometry"),
+      strength: el("pageStrength"),
+      export: el("pageCSV"),
+      theory: el("pageTheory")
+    },
 
     cvMesh: el("cvMesh"),
     cvPinion: el("cvPinion"),
@@ -1206,7 +1641,7 @@
   }
 
   // ----------------------
-  // Rack fillet + generator (unchanged)
+  // Rack fillet + generator (same as before)
   // ----------------------
   function eval_rc_from_dy(dy_try, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy){
     const yrl = y_end0 - dy_try;
@@ -2060,7 +2495,7 @@
   }
 
   // ----------------------
-  // Strength diagrams (AGMA vs ISO)
+  // Strength diagrams (same as before)
   // ----------------------
   function drawStrengthDiagramMember(cv, title, agmaMember, isoMember, agmaMesh, isoContactForMember){
     const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
@@ -2797,6 +3232,12 @@
     ui.navPages.querySelectorAll(".navbtn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.page === key);
     });
+
+    // if theory page, typeset math (MathJax)
+    if (key === "theory" && window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise();
+    }
+
     redrawCurrentPage();
   }
 
@@ -2806,6 +3247,8 @@
       drawMeshView();
     } else if (state.activePage === "strength"){
       drawStrengthDiagrams();
+    } else {
+      // export/theory: no canvases needed
     }
   }
 
