@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GEARCALC STUDENT — Involute Spur Gear Lab Suite</title>
+  <title>GEARCALC STUDENT — Involute Spur Gear Lab Suite (AGMA + ISO 6336)</title>
 
   <style>
     :root{
@@ -17,6 +17,7 @@
       --blue:#7AA2FF;
       --red:#FF6B6B;
       --green:#3DDC97;
+      --purple:#B47CFF;
 
       --shadow: 0 18px 44px rgba(0,0,0,.45);
       --shadow2: 0 10px 28px rgba(0,0,0,.32);
@@ -255,6 +256,8 @@
     .splitWide{ display:grid; grid-template-columns: 0.95fr 1.35fr; gap:12px; }
     @media (max-width:1180px){ .splitWide{ grid-template-columns:1fr; } }
 
+    .stack{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+
     .kv{
       display:grid;
       grid-template-columns: 1fr auto;
@@ -298,7 +301,7 @@
 
       <nav class="navTop" id="navPages">
         <button class="navbtn active" data-page="geometry">🧩 Geometry</button>
-        <button class="navbtn" data-page="agma">🛡️ AGMA</button>
+        <button class="navbtn" data-page="strength">🛡️ Strength (AGMA+ISO)</button>
         <button class="navbtn" data-page="export">💾 Exports</button>
       </nav>
 
@@ -332,7 +335,6 @@
             <input id="z2" type="number" step="1" value="31">
           </div>
 
-          <!-- NEW: Profile shifts -->
           <div class="field">
             <label>Profile shift x₁ (pinion)</label>
             <input id="x1" type="number" step="0.01" value="0.00">
@@ -431,104 +433,197 @@
       </section>
     </section>
 
-    <section class="page" id="pageAGMA">
-      <!-- (AGMA section unchanged from your file) -->
+    <section class="page" id="pageStrength">
       <div class="splitWide">
-        <section class="card">
-          <div class="head">
-            <h2>AGMA inputs</h2>
-            <div class="row">
-              <button class="btn" id="btnAGMAReset">Reset</button>
-              <button class="btn primary" id="btnAGMARecalc">Recalculate</button>
-            </div>
-          </div>
+        <div class="stack">
 
-          <div class="body">
-            <div class="grid">
-              <div class="field">
-                <label>Material preset</label>
-                <select id="agmaMat">
-                  <option value="steel250">Steel (HB~250)</option>
-                  <option value="steel300">Steel (HB~300)</option>
-                  <option value="carb">Carburized & hardened</option>
-                  <option value="nitr">Nitrided</option>
-                  <option value="castiron">Cast iron (GG25)</option>
-                  <option value="bronze">Bronze (Al bronze)</option>
-                </select>
+          <!-- AGMA inputs -->
+          <section class="card">
+            <div class="head">
+              <h2>AGMA inputs</h2>
+              <div class="row">
+                <button class="btn" id="btnAGMAReset">Reset</button>
+                <button class="btn primary" id="btnAGMARecalc">Recalculate</button>
               </div>
-              <div class="field"><label>S<sub>t</sub> [MPa]</label><input id="agmaSt" type="number" step="1" value="430"></div>
-              <div class="field"><label>S<sub>c</sub> [MPa]</label><input id="agmaSc" type="number" step="1" value="1100"></div>
-              <div class="field"><label>E [MPa]</label><input id="agmaE" type="number" step="100" value="206000"></div>
-              <div class="field"><label>ν [-]</label><input id="agmaNu" type="number" step="0.01" value="0.30"></div>
             </div>
 
-            <div class="sep"></div>
+            <div class="body">
+              <div class="grid">
+                <div class="field">
+                  <label>Material preset</label>
+                  <select id="agmaMat">
+                    <option value="steel250">Steel (HB~250)</option>
+                    <option value="steel300">Steel (HB~300)</option>
+                    <option value="carb">Carburized & hardened</option>
+                    <option value="nitr">Nitrided</option>
+                    <option value="castiron">Cast iron (GG25)</option>
+                    <option value="bronze">Bronze (Al bronze)</option>
+                  </select>
+                </div>
+                <div class="field"><label>S<sub>t</sub> [MPa]</label><input id="agmaSt" type="number" step="1" value="430"></div>
+                <div class="field"><label>S<sub>c</sub> [MPa]</label><input id="agmaSc" type="number" step="1" value="1100"></div>
+                <div class="field"><label>E [MPa]</label><input id="agmaE" type="number" step="100" value="206000"></div>
+                <div class="field"><label>ν [-]</label><input id="agmaNu" type="number" step="0.01" value="0.30"></div>
+              </div>
 
-            <div class="grid">
-              <div class="field"><label>J₁ (pinion)</label><input id="agmaJ1" type="number" step="0.001" value="0.300"></div>
-              <div class="field"><label>J₂ (gear)</label><input id="agmaJ2" type="number" step="0.001" value="0.300"></div>
+              <div class="sep"></div>
 
-              <label class="toggle" style="grid-column:1/-1;">
-                <input type="checkbox" id="agmaAutoJ" checked>
-                Auto J
-              </label>
+              <div class="grid">
+                <div class="field"><label>J₁ (pinion)</label><input id="agmaJ1" type="number" step="0.001" value="0.300"></div>
+                <div class="field"><label>J₂ (gear)</label><input id="agmaJ2" type="number" step="0.001" value="0.300"></div>
 
-              <div class="field"><label>I (pitting)</label><input id="agmaI" type="number" step="0.001" value="0.100"></div>
-              <div class="field"><label>Z<sub>R</sub></label><input id="agmaZR" type="number" step="0.01" value="1.00"></div>
+                <label class="toggle" style="grid-column:1/-1;">
+                  <input type="checkbox" id="agmaAutoJ" checked>
+                  Auto J
+                </label>
 
-              <label class="toggle" style="grid-column:1/-1;">
-                <input type="checkbox" id="agmaAutoI" checked>
-                Auto I
-              </label>
+                <div class="field"><label>I (pitting)</label><input id="agmaI" type="number" step="0.001" value="0.100"></div>
+                <div class="field"><label>Z<sub>R</sub></label><input id="agmaZR" type="number" step="0.01" value="1.00"></div>
+
+                <label class="toggle" style="grid-column:1/-1;">
+                  <input type="checkbox" id="agmaAutoI" checked>
+                  Auto I
+                </label>
+              </div>
+
+              <div class="sep"></div>
+
+              <div class="grid">
+                <div class="field"><label>K<sub>o</sub></label><input id="agmaKo" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>K<sub>v</sub></label><input id="agmaKv" type="number" step="0.01" value="1.10"></div>
+                <div class="field"><label>K<sub>s</sub></label><input id="agmaKs" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>K<sub>H</sub></label><input id="agmaKH" type="number" step="0.01" value="1.30"></div>
+                <div class="field"><label>K<sub>B</sub></label><input id="agmaKB" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>m<sub>N</sub></label><input id="agmaMN" type="number" step="0.01" value="1.00"></div>
+              </div>
+
+              <div class="sep"></div>
+
+              <div class="grid">
+                <div class="field"><label>Y<sub>N</sub></label><input id="agmaYN" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Z<sub>N</sub></label><input id="agmaZN" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Y<sub>T</sub></label><input id="agmaYT" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Y<sub>Z</sub></label><input id="agmaYZ" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Z<sub>W</sub></label><input id="agmaZW" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>S<sub>F</sub></label><input id="agmaSF" type="number" step="0.01" value="1.50"></div>
+                <div class="field"><label>S<sub>H</sub></label><input id="agmaSH" type="number" step="0.01" value="1.50"></div>
+              </div>
+
+              <div class="sep"></div>
+              <div class="err" id="agmaErr"></div>
+            </div>
+          </section>
+
+          <!-- ISO inputs -->
+          <section class="card">
+            <div class="head">
+              <h2>ISO 6336 inputs</h2>
+              <div class="row">
+                <button class="btn" id="btnISOReset">Reset</button>
+                <button class="btn primary" id="btnISORecalc">Recalculate</button>
+              </div>
             </div>
 
-            <div class="sep"></div>
+            <div class="body">
+              <div class="grid">
+                <div class="field">
+                  <label>Material preset</label>
+                  <select id="isoMat">
+                    <option value="steel250">Steel (HB~250)</option>
+                    <option value="steel300">Steel (HB~300)</option>
+                    <option value="carb">Carburized & hardened</option>
+                    <option value="nitr">Nitrided</option>
+                    <option value="castiron">Cast iron (GG25)</option>
+                    <option value="bronze">Bronze (Al bronze)</option>
+                  </select>
+                </div>
 
-            <div class="grid">
-              <div class="field"><label>K<sub>o</sub></label><input id="agmaKo" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>K<sub>v</sub></label><input id="agmaKv" type="number" step="0.01" value="1.10"></div>
-              <div class="field"><label>K<sub>s</sub></label><input id="agmaKs" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>K<sub>H</sub></label><input id="agmaKH" type="number" step="0.01" value="1.30"></div>
-              <div class="field"><label>K<sub>B</sub></label><input id="agmaKB" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>m<sub>N</sub></label><input id="agmaMN" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>σ<sub>F,lim</sub> [MPa]</label><input id="isoFlim" type="number" step="1" value="430"></div>
+                <div class="field"><label>σ<sub>H,lim</sub> [MPa]</label><input id="isoHlim" type="number" step="1" value="1100"></div>
+                <div class="field"><label>E [MPa]</label><input id="isoE" type="number" step="100" value="206000"></div>
+                <div class="field"><label>ν [-]</label><input id="isoNu" type="number" step="0.01" value="0.30"></div>
+              </div>
+
+              <div class="sep"></div>
+
+              <div class="grid">
+                <div class="field"><label>Y<sub>F1</sub> (pinion)</label><input id="isoYF1" type="number" step="0.01" value="2.20"></div>
+                <div class="field"><label>Y<sub>F2</sub> (gear)</label><input id="isoYF2" type="number" step="0.01" value="2.20"></div>
+                <div class="field"><label>Y<sub>S1</sub> (pinion)</label><input id="isoYS1" type="number" step="0.01" value="1.50"></div>
+                <div class="field"><label>Y<sub>S2</sub> (gear)</label><input id="isoYS2" type="number" step="0.01" value="1.50"></div>
+
+                <label class="toggle" style="grid-column:1/-1;">
+                  <input type="checkbox" id="isoAutoY" checked>
+                  Auto YF,YS (Lewis-based default)
+                </label>
+              </div>
+
+              <div class="sep"></div>
+
+              <div class="grid">
+                <div class="field"><label>K<sub>A</sub></label><input id="isoKA" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>K<sub>v</sub></label><input id="isoKv" type="number" step="0.01" value="1.10"></div>
+
+                <div class="field"><label>K<sub>Hβ</sub></label><input id="isoKHb" type="number" step="0.01" value="1.30"></div>
+                <div class="field"><label>K<sub>Hα</sub></label><input id="isoKHa" type="number" step="0.01" value="1.00"></div>
+
+                <div class="field"><label>K<sub>Fβ</sub></label><input id="isoKFb" type="number" step="0.01" value="1.30"></div>
+                <div class="field"><label>K<sub>Fα</sub></label><input id="isoKFa" type="number" step="0.01" value="1.00"></div>
+              </div>
+
+              <div class="sep"></div>
+
+              <div class="grid">
+                <div class="field"><label>Z<sub>N</sub> (life)</label><input id="isoZN" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Z<sub>L</sub></label><input id="isoZL" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Z<sub>R</sub></label><input id="isoZR2" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Z<sub>V</sub></label><input id="isoZV" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Z<sub>W</sub></label><input id="isoZW2" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Z<sub>X</sub></label><input id="isoZX" type="number" step="0.01" value="1.00"></div>
+
+                <div class="field"><label>Y<sub>ST</sub></label><input id="isoYST" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Y<sub>NT</sub></label><input id="isoYNT" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Y<sub>δrelT</sub></label><input id="isoYdel" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Y<sub>RrelT</sub></label><input id="isoYR" type="number" step="0.01" value="1.00"></div>
+                <div class="field"><label>Y<sub>X</sub></label><input id="isoYX" type="number" step="0.01" value="1.00"></div>
+
+                <div class="field"><label>S<sub>F</sub></label><input id="isoSF" type="number" step="0.01" value="1.50"></div>
+                <div class="field"><label>S<sub>H</sub></label><input id="isoSH" type="number" step="0.01" value="1.50"></div>
+
+                <label class="toggle" style="grid-column:1/-1;">
+                  <input type="checkbox" id="isoConservativeZeps" checked>
+                  Conservative Zε = 1 for εα&lt;2
+                </label>
+              </div>
+
+              <div class="sep"></div>
+              <div class="err" id="isoErr"></div>
             </div>
+          </section>
 
-            <div class="sep"></div>
-
-            <div class="grid">
-              <div class="field"><label>Y<sub>N</sub></label><input id="agmaYN" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>Z<sub>N</sub></label><input id="agmaZN" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>Y<sub>T</sub></label><input id="agmaYT" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>Y<sub>Z</sub></label><input id="agmaYZ" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>Z<sub>W</sub></label><input id="agmaZW" type="number" step="0.01" value="1.00"></div>
-              <div class="field"><label>S<sub>F</sub></label><input id="agmaSF" type="number" step="0.01" value="1.50"></div>
-              <div class="field"><label>S<sub>H</sub></label><input id="agmaSH" type="number" step="0.01" value="1.50"></div>
-            </div>
-
-            <div class="sep"></div>
-            <div class="err" id="agmaErr"></div>
-          </div>
-        </section>
+        </div>
 
         <section class="card">
-          <div class="head"><h2>AGMA diagrams</h2></div>
+          <div class="head"><h2>Strength diagrams (AGMA vs ISO)</h2></div>
           <div class="canvasWrap">
             <canvas id="cvAGMAPinion" class="canvasTall"></canvas>
             <canvas id="cvAGMAGear" class="canvasTall"></canvas>
 
             <div class="sep"></div>
 
-            <div class="kv"><div class="k">Pinion σF / allow [MPa]</div><div class="v" id="agma_sigF1">—</div></div>
-            <div class="kv"><div class="k">Gear σF / allow [MPa]</div><div class="v" id="agma_sigF2">—</div></div>
-            <div class="kv"><div class="k">σH / allow [MPa]</div><div class="v" id="agma_sigH">—</div></div>
-            <div class="kv"><div class="k">SF₁, SF₂, SH</div><div class="v" id="agma_SFs">—</div></div>
+            <div class="kv"><div class="k">Pinion σF (AGMA / ISO) | allow (AGMA / ISO) [MPa]</div><div class="v" id="strength_sigF1">—</div></div>
+            <div class="kv"><div class="k">Gear σF (AGMA / ISO) | allow (AGMA / ISO) [MPa]</div><div class="v" id="strength_sigF2">—</div></div>
+
+            <div class="kv"><div class="k">Pinion σH (AGMA / ISO) | allow (AGMA / ISO) [MPa]</div><div class="v" id="strength_sigH1">—</div></div>
+            <div class="kv"><div class="k">Gear σH (AGMA / ISO) | allow (AGMA / ISO) [MPa]</div><div class="v" id="strength_sigH2">—</div></div>
+
+            <div class="kv"><div class="k">Safety factors</div><div class="v" id="strength_SFs">—</div></div>
           </div>
         </section>
       </div>
     </section>
 
     <section class="page" id="pageCSV">
-      <!-- (Exports section unchanged from your file) -->
       <div class="splitWide">
 
         <section class="card">
@@ -611,7 +706,7 @@
 
     <div class="footer">
       <div class="copy">© <span id="year"></span> Machine Design Lab, NTUA — GEARCALC PRO</div>
-      <div class="copy">Geometry • AGMA • Exports</div>
+      <div class="copy">Geometry • Strength (AGMA+ISO) • Exports</div>
     </div>
 
   </main>
@@ -621,7 +716,6 @@
       <div class="head"><h2>Key results</h2></div>
       <div class="body">
 
-        <!-- NEW operating results -->
         <div class="kv"><div class="k">Operating pressure angle α<sub>w</sub> [deg]</div><div class="v" id="res_aw">—</div></div>
         <div class="kv"><div class="k">Center distance a<sub>12</sub> [mm]</div><div class="v" id="res_a12">—</div></div>
 
@@ -632,7 +726,6 @@
 
         <div class="sep"></div>
 
-        <!-- NEW diameters (pairs pinion/gear) -->
         <div class="kv"><div class="k">d₀ (pinion / gear) [mm]</div><div class="v" id="res_d0">—</div></div>
         <div class="kv"><div class="k">d<sub>g</sub> base (pinion / gear) [mm]</div><div class="v" id="res_dg">—</div></div>
         <div class="kv"><div class="k">d<sub>b</sub> working (pinion / gear) [mm]</div><div class="v" id="res_db">—</div></div>
@@ -647,7 +740,10 @@
         <div class="kv"><div class="k">Operating interference</div><div class="v" id="res_interf">—</div></div>
         <div class="kv"><div class="k">Undercut (rack-gen)</div><div class="v" id="res_uc">—</div></div>
 
+        <div class="sep"></div>
+
         <div class="kv"><div class="k">AGMA result</div><div class="v" id="res_agma">—</div></div>
+        <div class="kv"><div class="k">ISO result</div><div class="v" id="res_iso">—</div></div>
 
         <div class="sep"></div>
         <div class="err" id="warnBox"></div>
@@ -665,7 +761,7 @@
 
   const ui = {
     m: el("m"), alpha: el("alpha"), z1: el("z1"), z2: el("z2"),
-    x1: el("x1"), x2: el("x2"),                  // NEW
+    x1: el("x1"), x2: el("x2"),
     Ck: el("Ck"), Cf: el("Cf"), Cc: el("Cc"),
     b: el("b"), rc: el("rc"), N: el("N"),
     rpm: el("rpm"), torque: el("torque"),
@@ -676,7 +772,8 @@
     errBox: el("errBox"),
     warnBox: el("warnBox"),
     agmaErr: el("agmaErr"),
-    pages: { geometry: el("pageGeometry"), agma: el("pageAGMA"), export: el("pageCSV") },
+    isoErr: el("isoErr"),
+    pages: { geometry: el("pageGeometry"), strength: el("pageStrength"), export: el("pageCSV") },
 
     cvMesh: el("cvMesh"),
     cvPinion: el("cvPinion"),
@@ -694,12 +791,12 @@
     res_db: el("res_db"),
     res_dk: el("res_dk"),
     res_df: el("res_df"),
-
     res_tip1: el("res_tip1"),
     res_tip2: el("res_tip2"),
     res_interf: el("res_interf"),
     res_uc: el("res_uc"),
     res_agma: el("res_agma"),
+    res_iso: el("res_iso"),
 
     btnCSV_Profile: el("btnCSV_Profile"),
     btnCSV_Tooth: el("btnCSV_Tooth"),
@@ -714,6 +811,7 @@
     segSelect2: el("segSelect2"),
     segListInfo2: el("segListInfo2"),
 
+    // AGMA
     agmaMat: el("agmaMat"),
     agmaSt: el("agmaSt"),
     agmaSc: el("agmaSc"),
@@ -741,10 +839,46 @@
     btnAGMAReset: el("btnAGMAReset"),
     btnAGMARecalc: el("btnAGMARecalc"),
 
-    agma_sigF1: el("agma_sigF1"),
-    agma_sigF2: el("agma_sigF2"),
-    agma_sigH: el("agma_sigH"),
-    agma_SFs: el("agma_SFs")
+    // ISO
+    isoMat: el("isoMat"),
+    isoFlim: el("isoFlim"),
+    isoHlim: el("isoHlim"),
+    isoE: el("isoE"),
+    isoNu: el("isoNu"),
+    isoYF1: el("isoYF1"),
+    isoYF2: el("isoYF2"),
+    isoYS1: el("isoYS1"),
+    isoYS2: el("isoYS2"),
+    isoAutoY: el("isoAutoY"),
+    isoKA: el("isoKA"),
+    isoKv: el("isoKv"),
+    isoKHb: el("isoKHb"),
+    isoKHa: el("isoKHa"),
+    isoKFb: el("isoKFb"),
+    isoKFa: el("isoKFa"),
+    isoZN: el("isoZN"),
+    isoZL: el("isoZL"),
+    isoZR2: el("isoZR2"),
+    isoZV: el("isoZV"),
+    isoZW2: el("isoZW2"),
+    isoZX: el("isoZX"),
+    isoYST: el("isoYST"),
+    isoYNT: el("isoYNT"),
+    isoYdel: el("isoYdel"),
+    isoYR: el("isoYR"),
+    isoYX: el("isoYX"),
+    isoSF: el("isoSF"),
+    isoSH: el("isoSH"),
+    isoConservativeZeps: el("isoConservativeZeps"),
+    btnISOReset: el("btnISOReset"),
+    btnISORecalc: el("btnISORecalc"),
+
+    // strength outputs
+    strength_sigF1: el("strength_sigF1"),
+    strength_sigF2: el("strength_sigF2"),
+    strength_sigH1: el("strength_sigH1"),
+    strength_sigH2: el("strength_sigH2"),
+    strength_SFs: el("strength_SFs")
   };
 
   el("year").textContent = new Date().getFullYear();
@@ -753,9 +887,9 @@
 
   const state = {
     activePage: "geometry",
-    base: null,             // legacy rack-gen geometry used for outlines
-    oper: null,             // NEW: operating geometry from profile shifts (PhD eqs)
-    qc: null,               // {tip1, tip2, inter, uc1, uc2}
+    base: null,
+    oper: null,
+    qc: null,
     lastProfilePP: null,
 
     pinionTooth: null,
@@ -767,6 +901,8 @@
     gearSeg: null,
 
     agma: null,
+    iso: null,
+
     view: { zoom: 1.0, panX: 0, panY: 0 },
     drag: { on:false, x0:0, y0:0, panX0:0, panY0:0 }
   };
@@ -808,21 +944,6 @@
     const c = Math.cos(ang), s = Math.sin(ang);
     return [x*c - y*s, x*s + y*c];
   }
-  function cumulativeArcLength(x, y){
-    const n = x.length;
-    const s = new Array(n).fill(0);
-    for (let i=1;i<n;i++){
-      s[i] = s[i-1] + Math.hypot(x[i]-x[i-1], y[i]-y[i-1]);
-    }
-    return s;
-  }
-  function argmin(arr){
-    let idx = 0, best = arr[0];
-    for (let i=1;i<arr.length;i++){
-      if (arr[i] < best){ best = arr[i]; idx = i; }
-    }
-    return idx;
-  }
   function downloadCSV(filename, rows){
     const csv = rows.map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
@@ -858,22 +979,20 @@
   }
 
   // ----------------------
-  // Involute + inverse involute (PhD / Dudley)
-  // inv(a) = tan(a) - a
-  // Solve inv(phi) = invphi for phi via initial guess + Newton
+  // Involute + inverse involute
   // ----------------------
   function invAngle(a){ return Math.tan(a) - a; }
 
   function invToAngle(invphi){
     if (!(invphi >= 0)) throw new Error("Invalid inv(): invphi < 0.");
-    if (invphi > Math.PI) throw new Error("Invalid inv(): invphi > π (out of Dudley range).");
+    if (invphi > Math.PI) throw new Error("Invalid inv(): invphi > π.");
     if (invphi === 0) return 0;
 
     let phi;
     if (invphi < 0.5){
-      phi = 1.441*Math.cbrt(invphi) - 0.366*invphi;           // Dudley initial
+      phi = 1.441*Math.cbrt(invphi) - 0.366*invphi;
     } else {
-      phi = 0.243*Math.PI - 0.471*Math.atan(invphi);          // Dudley initial
+      phi = 0.243*Math.PI - 0.471*Math.atan(invphi);
     }
 
     const itMax = 60;
@@ -881,7 +1000,7 @@
     for (let k=0;k<itMax;k++){
       const t = Math.tan(phi);
       const f = (t - phi) - invphi;
-      const fp = t*t; // derivative of tan(phi)-phi is tan^2(phi)
+      const fp = t*t;
       const dphi = -f / Math.max(1e-15, fp);
       phi = phi + dphi;
       if (Math.abs(dphi) <= tol) break;
@@ -890,32 +1009,26 @@
   }
 
   // ----------------------
-  // Operating geometry from profile shifts (PhD Eq. 4.20–4.27)
-  // Outputs: alphaW, a12, d0,dg,db,dk,df, LOA length & eps (standard involute formula)
+  // Operating geometry from profile shifts
   // ----------------------
   function computeOperatingFromShifts({m,z1,z2,alpha0,Ck,Cf,x1,x2,Nlo=400}){
     const ro1 = m*z1/2, ro2 = m*z2/2;
     const rb1 = ro1*Math.cos(alpha0), rb2 = ro2*Math.cos(alpha0);
 
-    // Eq. (4.26)-(4.27): addendum/root radii with shifts
     const ra1 = ro1 + (Ck + x1)*m;
     const ra2 = ro2 + (Ck + x2)*m;
     const rf1 = ro1 - (Cf - x1)*m;
     const rf2 = ro2 - (Cf - x2)*m;
 
-    if (!isFinite(ra1) || !isFinite(ra2) || !isFinite(rf1) || !isFinite(rf2)) throw new Error("Invalid radii (NaN).");
     if (!(Ck + x1 > 0 && Ck + x2 > 0)) throw new Error("Invalid: (Ck + x) must be > 0 for both gears.");
     if (!(Cf - x1 > 0 && Cf - x2 > 0)) throw new Error("Invalid: (Cf - x) must be > 0 for both gears.");
 
-    // Eq. (4.21)
     const inva0 = invAngle(alpha0);
     const invaw = inva0 + (2*(x1 + x2)/(z1 + z2))*Math.tan(alpha0);
     const alphaW = invToAngle(invaw);
 
-    // Eq. (4.22): center distance
     const a12 = ((z1 + z2)*m/2) * (Math.cos(alpha0)/Math.cos(alphaW));
 
-    // Eq. (4.25): rg and rw, db
     const rg1 = ro1*Math.cos(alpha0);
     const rg2 = ro2*Math.cos(alpha0);
     const rw1 = rg1/Math.cos(alphaW);
@@ -923,30 +1036,23 @@
     const db1 = 2*rw1;
     const db2 = 2*rw2;
 
-    // diameters requested
     const d01 = m*z1, d02 = m*z2;
     const dg1 = d01*Math.cos(alpha0);
     const dg2 = d02*Math.cos(alpha0);
     const dk1 = 2*ra1, dk2 = 2*ra2;
     const df1 = 2*rf1, df2 = 2*rf2;
 
-    // Standard involute LOA length for operating geometry:
-    // L = sqrt(ra1^2-rb1^2)+sqrt(ra2^2-rb2^2) - a12*sin(alphaW)
     const term1 = ra1*ra1 - rb1*rb1;
     const term2 = ra2*ra2 - rb2*rb2;
     if (term1 <= 0 || term2 <= 0){
-      throw new Error("Invalid: ra <= rb for one gear (no involute contact). Check Ck and x.");
+      throw new Error("Invalid: ra <= rb for one gear (no involute contact).");
     }
     const L = Math.sqrt(term1) + Math.sqrt(term2) - a12*Math.sin(alphaW);
-    if (!(L > 0)) throw new Error("Invalid LOA length (<=0). Check shifts / addendum / alpha.");
+    if (!(L > 0)) throw new Error("Invalid LOA length (<=0).");
 
     const pb = Math.PI*m*Math.cos(alpha0);
     const eps = L / pb;
 
-    // Build LOA points for display (pinion frame):
-    // Pitch point P at (0, rw1). LOA direction at angle alphaW from x-axis.
-    // Approach length: sqrt(ra2^2-rb2^2) - rw2*sin(alphaW)
-    // Recess length:   sqrt(ra1^2-rb1^2) - rw1*sin(alphaW)
     const sA = Math.sqrt(term2) - rw2*Math.sin(alphaW);
     const sR = Math.sqrt(term1) - rw1*Math.sin(alphaW);
     const nPts = Math.max(50, Math.round(Nlo));
@@ -971,7 +1077,7 @@
   }
 
   // ----------------------
-  // QC: Tip thickness (SIGNED short-arc)
+  // QC helpers
   // ----------------------
   function tipThicknessSignedFromAddArc(segAdd){
     if (!segAdd || segAdd.length < 2) return { sa: NaN, dtheta: NaN, rA: NaN };
@@ -980,23 +1086,18 @@
     const rA = 0.5*(Math.hypot(pL[0], pL[1]) + Math.hypot(pR[0], pR[1]));
     const thL = Math.atan2(pL[0], pL[1]);
     const thR = Math.atan2(pR[0], pR[1]);
-    let d = Math.atan2(Math.sin(thR - thL), Math.cos(thR - thL)); // shortest signed
+    let d = Math.atan2(Math.sin(thR - thL), Math.cos(thR - thL));
     const sa = rA * d;
     return { sa, dtheta: d, rA };
   }
 
-  // ----------------------
-  // QC: Operating interference check (using operating LOA points)
-  // Contact points should never go below base circles for valid involute segment,
-  // but we keep it as a safety check.
-  // ----------------------
   function checkOperatingInterferenceOperating(oper){
     const tol = 1e-6 * Math.max(oper.ro1, oper.ro2);
     let minR1 = +Infinity, minR2 = +Infinity;
     for (let i=0;i<oper.xLOA.length;i++){
       const x = oper.xLOA[i], y = oper.yLOA[i];
-      const r1 = Math.hypot(x, y);                 // dist to pinion center
-      const r2 = Math.hypot(x, y - oper.a12);      // dist to gear center at (0,a12)
+      const r1 = Math.hypot(x, y);
+      const r2 = Math.hypot(x, y - oper.a12);
       if (r1 < minR1) minR1 = r1;
       if (r2 < minR2) minR2 = r2;
     }
@@ -1010,10 +1111,6 @@
     };
   }
 
-  // ----------------------
-  // QC: Manufacturing undercut (improved with profile shift)
-  // Zmin ≈ 2[ (Cf - x) - Cc(1 - sin α0) ] / sin^2 α0
-  // ----------------------
   function checkManufacturingUndercut(z, alphaRad, Cf, Cc, x){
     const sinA = Math.sin(alphaRad);
     const denom = sinA*sinA;
@@ -1026,11 +1123,9 @@
   }
 
   // ----------------------
-  // Legacy rack-based involute LOA/profile used for building outlines
-  // (kept, but ra/rf updated using x1/x2 so the trimming is consistent)
+  // Legacy rack-based LOA/profile used for outlines
   // ----------------------
   function computeInvoluteLOAandProfile({ m, z1, z2, alphaRad, Ck, Cf, x1, x2, N }){
-
     if (!(m>0)) throw new Error("Module m must be > 0.");
     if (!(z1>=3 && Number.isInteger(z1))) throw new Error("z1 must be integer ≥ 3.");
     if (!(z2>=3 && Number.isInteger(z2))) throw new Error("z2 must be integer ≥ 3.");
@@ -1043,7 +1138,6 @@
     const rb1 = ro1*Math.cos(alphaRad);
     const rb2 = ro2*Math.cos(alphaRad);
 
-    // UPDATED: ra/rf include shifts (PhD Eq. 4.26–4.27)
     const ra1 = ro1 + (Ck + x1)*m;
     const ra2 = ro2 + (Ck + x2)*m;
     const rf1 = ro1 - (Cf - x1)*m;
@@ -1112,7 +1206,7 @@
   }
 
   // ----------------------
-  // Rack fillet + gear generator (your functions unchanged)
+  // Rack fillet + generator (unchanged)
   // ----------------------
   function eval_rc_from_dy(dy_try, m, Cf, offset, phir_new, K0, delta0, phir0, x_end0, y_end0, slope_dxdy){
     const yrl = y_end0 - dy_try;
@@ -1448,7 +1542,7 @@
   }
 
   // ----------------------
-  // Drawing (minor change: LOA uses state.oper LOA now)
+  // Drawing
   // ----------------------
   function drawToothCanvas(cv, base, tooth, full, opts){
     const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
@@ -1526,7 +1620,6 @@
 
   function drawGeometryDual(){
     const b = state.base;
-
     const loa = state.oper ? {x: state.oper.xLOA, y: state.oper.yLOA} : null;
 
     drawToothCanvas(ui.cvPinion, b, state.pinionTooth, state.pinionFull, {
@@ -1555,10 +1648,7 @@
 
     const base = state.base;
     const oper = state.oper;
-
-    // UPDATED: center distance from shifts
     const a_w = oper.a12;
-
     const gearRot = Math.PI + (Math.PI / base.z2);
 
     function transformXY(x, y, rot, tx, ty){
@@ -1594,7 +1684,6 @@
 
     const pad = 18;
 
-    // UPDATED: view anchor at working pitch point (0, rw1)
     const xP = 0;
     const yP = oper.rw1;
 
@@ -1624,14 +1713,12 @@
       ctx.restore();
     }
 
-    // pinion circles
     drawCircleWorld(base.ra1, 0, 0);
-    drawCircleWorld(oper.rw1, 0, 0);     // UPDATED: working pitch
+    drawCircleWorld(oper.rw1, 0, 0);
     drawCircleWorld(base.rf1, 0, 0);
 
-    // gear circles
     drawCircleWorld(base.ra2, 0, a_w);
-    drawCircleWorld(oper.rw2, 0, a_w);   // UPDATED: working pitch
+    drawCircleWorld(oper.rw2, 0, a_w);
     drawCircleWorld(base.rf2, 0, a_w);
 
     ctx.save();
@@ -1662,7 +1749,6 @@
     drawPolyline(pinPts, "rgba(122,162,255,.95)");
     drawPolyline(gearPts, "rgba(255,107,107,.95)");
 
-    // Optional: draw LOA on mesh
     if (ui.showLOA.checked && oper){
       ctx.save();
       ctx.strokeStyle = "rgba(61,220,151,.80)";
@@ -1679,7 +1765,7 @@
   }
 
   // ----------------------
-  // AGMA (unchanged from your file)
+  // AGMA
   // ----------------------
   const matPresets = {
     steel250: {St: 430, Sc: 1100, E: 206000, nu: 0.30},
@@ -1726,12 +1812,11 @@
     if (!state.base) return null;
 
     const base = state.base;
-
     const m = base.m;
     const b = parseFloat(ui.b.value);
     const T = parseFloat(ui.torque.value);
-    if (!(isFinite(b) && b>0)) throw new Error("b must be > 0.");
-    if (!(isFinite(T) && T>0)) throw new Error("T must be > 0.");
+    if (!(isFinite(b) && b>0)) throw new Error("AGMA: b must be > 0.");
+    if (!(isFinite(T) && T>0)) throw new Error("AGMA: T must be > 0.");
 
     const Ko = parseFloat(ui.agmaKo.value);
     const Kv = parseFloat(ui.agmaKv.value);
@@ -1759,7 +1844,7 @@
     const SH = parseFloat(ui.agmaSH.value);
 
     const r1_m = (base.ro1 * 1e-3);
-    const Wt = T / r1_m;
+    const Wt = T / Math.max(1e-12, r1_m);
 
     const sigmaF1 = (Wt * Ko * Kv * Ks * KH * KB) / (Math.max(1e-9, b) * Math.max(1e-9, m) * Math.max(1e-9, J1));
     const sigmaF2 = (Wt * Ko * Kv * Ks * KH * KB) / (Math.max(1e-9, b) * Math.max(1e-9, m) * Math.max(1e-9, J2));
@@ -1789,13 +1874,198 @@
     };
   }
 
-  // (Draw AGMA diagrams code unchanged — omitted for brevity? NO: keep exact same as before)
-  // For simplicity, I kept it identical to your version; it will still run because we didn't change its ids/functions.
-  // --------- BEGIN (your unchanged drawAGMADiagramMember + drawAGMADiagrams) ----------
-  function drawAGMADiagramMember(cv, title, member, mesh){
+  // ----------------------
+  // ISO 6336 (student-robust, spur β=0)
+  // ----------------------
+  function applyISOMaterialPreset(){
+    const key = ui.isoMat.value;
+    const p = matPresets[key] || matPresets.steel250;
+    ui.isoFlim.value = String(p.St);
+    ui.isoHlim.value = String(p.Sc);
+    ui.isoE.value  = String(p.E);
+    ui.isoNu.value = String(p.nu);
+  }
+
+  function autoComputeISOY(){
+    if (!state.base) return;
+    const y1 = lewisApproxY20FD(state.base.z1);
+    const y2 = lewisApproxY20FD(state.base.z2);
+    const YSdef = 1.50;
+    const YF1 = (1/Math.max(1e-9, y1)) / YSdef;
+    const YF2 = (1/Math.max(1e-9, y2)) / YSdef;
+    ui.isoYS1.value = fmt(YSdef,2);
+    ui.isoYS2.value = fmt(YSdef,2);
+    ui.isoYF1.value = fmt(YF1,2);
+    ui.isoYF2.value = fmt(YF2,2);
+  }
+
+  function computeZE_ISO(E1, nu1, E2, nu2){
+    const t = (1 - nu1*nu1)/Math.max(1e-9, E1) + (1 - nu2*nu2)/Math.max(1e-9, E2);
+    const denom = Math.PI * Math.max(1e-18, t);
+    return Math.sqrt(1/denom);
+  }
+
+  function computeZeps_spur(epsAlpha, conservative){
+    if (!isFinite(epsAlpha) || epsAlpha <= 0) return 1.0;
+    if (conservative && epsAlpha < 2.0) return 1.0;
+    const ea = clamp(epsAlpha, 1.0, 3.99);
+    const val = (4 - ea)/3;
+    return Math.sqrt(Math.max(1e-12, val));
+  }
+
+  function computeZB_ZD_spur({z1,z2,da1,da2,db1,db2,alphaW,epsAlpha}){
+    if (!(epsAlpha > 1)) return {ZB:1, ZD:1, M1:1, M2:1};
+
+    function safeA(da, db, z, useEpsTerm){
+      const r = (da*da)/(Math.max(1e-12, db*db));
+      const term = useEpsTerm ? ((epsAlpha - 1)*2*Math.PI/Math.max(3,z)) : (2*Math.PI/Math.max(3,z));
+      return (r - 1 - term);
+    }
+
+    const A1 = safeA(da1, db1, z1, false);
+    const B1 = safeA(da2, db2, z2, true);
+
+    const A2 = safeA(da2, db2, z2, false);
+    const B2 = safeA(da1, db1, z1, true);
+
+    function M(A,B){
+      const prod = A*B;
+      if (!(prod > 1e-12) || !isFinite(prod)) return 1.0;
+      const den = Math.sqrt(Math.sqrt(prod));
+      return Math.tan(alphaW)/Math.max(1e-12, den);
+    }
+
+    const M1 = M(A1,B1);
+    const M2 = M(A2,B2);
+
+    return {
+      M1, M2,
+      ZB: (M1 > 1) ? M1 : 1,
+      ZD: (M2 > 1) ? M2 : 1
+    };
+  }
+
+  function computeISOAll(){
+    if (!state.base || !state.oper) return null;
+
+    const base = state.base;
+    const oper = state.oper;
+
+    const b = parseFloat(ui.b.value);
+    const T = parseFloat(ui.torque.value);
+    if (!(isFinite(b) && b>0)) throw new Error("ISO: b must be > 0.");
+    if (!(isFinite(T) && T>0)) throw new Error("ISO: T must be > 0.");
+
+    const r1_m = (base.ro1 * 1e-3);
+    const Ft = T / Math.max(1e-12, r1_m);
+
+    const z1 = base.z1, z2 = base.z2;
+    const u = z2 / Math.max(1e-12, z1);
+
+    const d1 = oper.d01;
+    const da1 = oper.dk1;
+    const da2 = oper.dk2;
+    const db1 = oper.dg1;
+    const db2 = oper.dg2;
+
+    const alpha_t = base.alphaRad;
+    const alphaW  = oper.alphaW;
+
+    const KA = parseFloat(ui.isoKA.value);
+    const Kv = parseFloat(ui.isoKv.value);
+
+    const KHb = parseFloat(ui.isoKHb.value);
+    const KHa = parseFloat(ui.isoKHa.value);
+
+    const KFb = parseFloat(ui.isoKFb.value);
+    const KFa = parseFloat(ui.isoKFa.value);
+
+    const E = parseFloat(ui.isoE.value);
+    const nu = parseFloat(ui.isoNu.value);
+
+    const ZE = computeZE_ISO(E,nu,E,nu);
+
+    const ZH = Math.sqrt(
+      (2*Math.cos(0)*Math.cos(alphaW)) /
+      (Math.max(1e-12, Math.cos(alpha_t)*Math.cos(alpha_t)) * Math.max(1e-12, Math.sin(alphaW)))
+    );
+
+    const Zeps = computeZeps_spur(oper.eps, ui.isoConservativeZeps.checked);
+    const Zbeta = 1.0;
+
+    const {ZB, ZD} = computeZB_ZD_spur({z1,z2,da1,da2,db1,db2,alphaW,epsAlpha: oper.eps});
+
+    const sigmaH0 = ZE * ZH * Zeps * Zbeta * Math.sqrt(
+      (Ft*(u+1)) / (Math.max(1e-12, b) * Math.max(1e-12, d1) * Math.max(1e-12, u))
+    );
+
+    const KHp = Math.sqrt(Math.max(1e-12, KA*Kv*KHb*KHa));
+    const sigmaH1 = ZB * sigmaH0 * KHp;
+    const sigmaH2 = ZD * sigmaH0 * KHp;
+
+    const sigmaHlim = parseFloat(ui.isoHlim.value);
+    const ZN = parseFloat(ui.isoZN.value);
+    const ZL = parseFloat(ui.isoZL.value);
+    const ZR = parseFloat(ui.isoZR2.value);
+    const ZV = parseFloat(ui.isoZV.value);
+    const ZW = parseFloat(ui.isoZW2.value);
+    const ZX = parseFloat(ui.isoZX.value);
+    const SH = parseFloat(ui.isoSH.value);
+
+    const sigHP = (sigmaHlim * ZN * ZL * ZR * ZV * ZW * ZX) / Math.max(1e-12, SH);
+
+    const SH1 = sigHP / Math.max(1e-12, sigmaH1);
+    const SH2 = sigHP / Math.max(1e-12, sigmaH2);
+
+    const mn = base.m;
+    const YF1 = parseFloat(ui.isoYF1.value);
+    const YF2 = parseFloat(ui.isoYF2.value);
+    const YS1 = parseFloat(ui.isoYS1.value);
+    const YS2 = parseFloat(ui.isoYS2.value);
+
+    const Ybeta = 1.0;
+    const YB = 1.0;
+    const YDT = 1.0;
+
+    const sigmaF01 = (Ft/(Math.max(1e-12,b)*Math.max(1e-12,mn))) * YF1 * YS1 * Ybeta * YB * YDT;
+    const sigmaF02 = (Ft/(Math.max(1e-12,b)*Math.max(1e-12,mn))) * YF2 * YS2 * Ybeta * YB * YDT;
+
+    const sigmaF1 = sigmaF01 * (KA*Kv*KFb*KFa);
+    const sigmaF2 = sigmaF02 * (KA*Kv*KFb*KFa);
+
+    const sigmaFlim = parseFloat(ui.isoFlim.value);
+    const YST = parseFloat(ui.isoYST.value);
+    const YNT = parseFloat(ui.isoYNT.value);
+    const Ydel = parseFloat(ui.isoYdel.value);
+    const YRr = parseFloat(ui.isoYR.value);
+    const YX = parseFloat(ui.isoYX.value);
+    const SF = parseFloat(ui.isoSF.value);
+
+    const sigFP = (sigmaFlim * YST * YNT * Ydel * YRr * YX) / Math.max(1e-12, SF);
+
+    const SF1 = sigFP / Math.max(1e-12, sigmaF1);
+    const SF2 = sigFP / Math.max(1e-12, sigmaF2);
+
+    const passF1 = sigmaF1 <= sigFP + 1e-9;
+    const passF2 = sigmaF2 <= sigFP + 1e-9;
+    const passH1 = sigmaH1 <= sigHP + 1e-9;
+    const passH2 = sigmaH2 <= sigHP + 1e-9;
+
+    return {
+      contact: {sigmaH0, sigmaH1, sigmaH2, sigHP, SH1, SH2, passH1, passH2, ZE, ZH, Zeps, ZB, ZD},
+      pinion: {sigmaF: sigmaF1, sigFP, SF: SF1, passF: passF1},
+      gear:   {sigmaF: sigmaF2, sigFP, SF: SF2, passF: passF2},
+      passAll: (passF1 && passF2 && passH1 && passH2)
+    };
+  }
+
+  // ----------------------
+  // Strength diagrams (AGMA vs ISO)
+  // ----------------------
+  function drawStrengthDiagramMember(cv, title, agmaMember, isoMember, agmaMesh, isoContactForMember){
     const {ctx, cssW, cssH} = setupHiDPICanvas(cv);
 
-    if (!member || !mesh){
+    if (!agmaMember && !isoMember){
       ctx.save();
       ctx.fillStyle = "rgba(255,255,255,.55)";
       ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
@@ -1804,9 +2074,14 @@
       return;
     }
 
-    const maxV = Math.max(member.sigmaF, member.sigF_allow, mesh.sigmaH, mesh.sigH_allow) * 1.20;
-    const rect = {x:70, y:26, w: cssW-90, h: cssH-86};
+    const vals = [];
+    if (agmaMember) vals.push(agmaMember.sigmaF, agmaMember.sigF_allow);
+    if (isoMember)  vals.push(isoMember.sigmaF, isoMember.sig_allow);
+    if (agmaMesh)   vals.push(agmaMesh.sigmaH, agmaMesh.sigH_allow);
+    if (isoContactForMember) vals.push(isoContactForMember.sigmaH, isoContactForMember.sig_allow);
 
+    const maxV = Math.max(...vals.filter(v=>isFinite(v))) * 1.20;
+    const rect = {x:70, y:26, w: cssW-90, h: cssH-86};
     function Y(v){ return rect.y + (1 - v/Math.max(1e-12,maxV))*rect.h; }
 
     ctx.save();
@@ -1824,7 +2099,6 @@
     ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
-
     for (let i=0;i<=5;i++){
       const a = i/5;
       const v = a*maxV;
@@ -1845,13 +2119,20 @@
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillText(title, rect.x, 6);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "rgba(122,162,255,.95)";
+    ctx.fillText("AGMA", rect.x+rect.w, 6);
+    ctx.fillStyle = "rgba(180,124,255,.95)";
+    ctx.fillText("  ISO", rect.x+rect.w, 20);
     ctx.restore();
 
-    const gx1 = rect.x + rect.w*0.32;
-    const gx2 = rect.x + rect.w*0.74;
-    const barW = Math.min(68, rect.w*0.16);
+    const gxB = rect.x + rect.w*0.32;
+    const gxC = rect.x + rect.w*0.74;
+    const barW = Math.min(56, rect.w*0.14);
+    const off  = barW*0.35;
 
-    function bar(xCenter, v, ok){
+    function bar(xCenter, v, ok, color){
       const x = xCenter - barW/2;
       const y = Y(v);
       const h = (rect.y+rect.h) - y;
@@ -1860,7 +2141,7 @@
       ctx.shadowColor = "rgba(0,0,0,.45)";
       ctx.shadowBlur = 10;
       ctx.shadowOffsetY = 4;
-      ctx.fillStyle = ok ? "rgba(122,162,255,.82)" : "rgba(255,107,107,.82)";
+      ctx.fillStyle = ok ? color : "rgba(255,107,107,.82)";
       ctx.fillRect(x, y, barW, h);
       ctx.restore();
 
@@ -1874,22 +2155,24 @@
       ctx.restore();
     }
 
-    function allowLine(xCenter, v){
+    function allowLine(xCenter, v, dashed){
       const y = Y(v);
       ctx.save();
       ctx.strokeStyle = "rgba(61,220,151,.92)";
       ctx.lineWidth = 2;
+      if (dashed) ctx.setLineDash([6,5]);
       ctx.beginPath();
-      ctx.moveTo(xCenter - barW*0.85, y);
-      ctx.lineTo(xCenter + barW*0.85, y);
+      ctx.moveTo(xCenter - barW*1.05, y);
+      ctx.lineTo(xCenter + barW*1.05, y);
       ctx.stroke();
+      ctx.setLineDash([]);
       ctx.restore();
     }
 
-    function topTag(x, y, txt, color){
+    function tag(x, y, txt, color){
       ctx.save();
       ctx.fillStyle = color || "rgba(255,255,255,.90)";
-      ctx.font = "900 11px " + getComputedStyle(document.body).fontFamily;
+      ctx.font = "900 10.5px " + getComputedStyle(document.body).fontFamily;
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
       ctx.fillText(txt, x, y);
@@ -1906,17 +2189,33 @@
       ctx.restore();
     }
 
-    bar(gx1, member.sigmaF, member.passF);
-    allowLine(gx1, member.sigF_allow);
-    topTag(gx1, Y(member.sigmaF)-6, "σF=" + fmt(member.sigmaF,0));
-    topTag(gx1, Y(member.sigF_allow)-6, "allow=" + fmt(member.sigF_allow,0), "rgba(61,220,151,.92)");
-    bottomLabel(gx1, "Bending");
+    if (agmaMember){
+      bar(gxB - off, agmaMember.sigmaF, agmaMember.passF, "rgba(122,162,255,.82)");
+      allowLine(gxB, agmaMember.sigF_allow, false);
+      tag(gxB - off, Y(agmaMember.sigmaF)-6, "σF=" + fmt(agmaMember.sigmaF,0), "rgba(122,162,255,.95)");
+      tag(gxB, Y(agmaMember.sigF_allow)-6, "allow(A)=" + fmt(agmaMember.sigF_allow,0), "rgba(61,220,151,.92)");
+    }
+    if (isoMember){
+      bar(gxB + off, isoMember.sigmaF, isoMember.pass, "rgba(180,124,255,.82)");
+      allowLine(gxB, isoMember.sig_allow, true);
+      tag(gxB + off, Y(isoMember.sigmaF)-6, "σF=" + fmt(isoMember.sigmaF,0), "rgba(180,124,255,.95)");
+      tag(gxB, Y(isoMember.sig_allow)-18, "allow(I)=" + fmt(isoMember.sig_allow,0), "rgba(61,220,151,.92)");
+    }
+    bottomLabel(gxB, "Bending");
 
-    bar(gx2, mesh.sigmaH, mesh.passH);
-    allowLine(gx2, mesh.sigH_allow);
-    topTag(gx2, Y(mesh.sigmaH)-6, "σH=" + fmt(mesh.sigmaH,0));
-    topTag(gx2, Y(mesh.sigH_allow)-6, "allow=" + fmt(mesh.sigH_allow,0), "rgba(61,220,151,.92)");
-    bottomLabel(gx2, "Contact");
+    if (agmaMesh){
+      bar(gxC - off, agmaMesh.sigmaH, agmaMesh.passH, "rgba(122,162,255,.82)");
+      allowLine(gxC, agmaMesh.sigH_allow, false);
+      tag(gxC - off, Y(agmaMesh.sigmaH)-6, "σH=" + fmt(agmaMesh.sigmaH,0), "rgba(122,162,255,.95)");
+      tag(gxC, Y(agmaMesh.sigH_allow)-6, "allow(A)=" + fmt(agmaMesh.sigH_allow,0), "rgba(61,220,151,.92)");
+    }
+    if (isoContactForMember){
+      bar(gxC + off, isoContactForMember.sigmaH, isoContactForMember.pass, "rgba(180,124,255,.82)");
+      allowLine(gxC, isoContactForMember.sig_allow, true);
+      tag(gxC + off, Y(isoContactForMember.sigmaH)-6, "σH=" + fmt(isoContactForMember.sigmaH,0), "rgba(180,124,255,.95)");
+      tag(gxC, Y(isoContactForMember.sig_allow)-18, "allow(I)=" + fmt(isoContactForMember.sig_allow,0), "rgba(61,220,151,.92)");
+    }
+    bottomLabel(gxC, "Contact");
 
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,.70)";
@@ -1929,17 +2228,25 @@
     ctx.restore();
   }
 
-  function drawAGMADiagrams(){
+  function drawStrengthDiagrams(){
     const a = state.agma;
-    if (!a){
-      drawAGMADiagramMember(ui.cvAGMAPinion, "Pinion", null, null);
-      drawAGMADiagramMember(ui.cvAGMAGear, "Gear", null, null);
+    const i = state.iso;
+
+    if (!a && !i){
+      drawStrengthDiagramMember(ui.cvAGMAPinion, "Pinion", null, null, null, null);
+      drawStrengthDiagramMember(ui.cvAGMAGear, "Gear", null, null, null, null);
       return;
     }
-    drawAGMADiagramMember(ui.cvAGMAPinion, "Pinion", a.pinion, a.mesh);
-    drawAGMADiagramMember(ui.cvAGMAGear, "Gear", a.gear, a.mesh);
+
+    const isoPin = i ? {sigmaF: i.pinion.sigmaF, sig_allow: i.pinion.sigFP, pass: i.pinion.passF} : null;
+    const isoGear = i ? {sigmaF: i.gear.sigmaF,   sig_allow: i.gear.sigFP,   pass: i.gear.passF} : null;
+
+    const isoHpin = i ? {sigmaH: i.contact.sigmaH1, sig_allow: i.contact.sigHP, pass: i.contact.passH1} : null;
+    const isoHger = i ? {sigmaH: i.contact.sigmaH2, sig_allow: i.contact.sigHP, pass: i.contact.passH2} : null;
+
+    drawStrengthDiagramMember(ui.cvAGMAPinion, "Pinion", a ? a.pinion : null, isoPin, a ? a.mesh : null, isoHpin);
+    drawStrengthDiagramMember(ui.cvAGMAGear,   "Gear",   a ? a.gear   : null, isoGear, a ? a.mesh : null, isoHger);
   }
-  // --------- END (unchanged) ----------
 
   // ----------------------
   // Results + warnings UI
@@ -1973,7 +2280,6 @@
 
     const base = state.base;
     const qc = state.qc;
-    const oper = state.oper;
 
     const msgs = [];
 
@@ -2059,12 +2365,16 @@
     } else {
       setVal(ui.res_agma, state.agma.passAll ? "PASS" : "FAIL", state.agma.passAll ? "var(--green)" : "var(--red)");
     }
+    if (!state.iso){
+      setVal(ui.res_iso, "—");
+    } else {
+      setVal(ui.res_iso, state.iso.passAll ? "PASS" : "FAIL", state.iso.passAll ? "var(--green)" : "var(--red)");
+    }
 
     showErr(ui.warnBox, buildWarningsHTML());
   }
 
   function updateCSVInfoUI(){
-    // Pinion
     ui.segListInfo.innerHTML = "";
     const pinOK = !!(state.pinionFull && state.pinionTooth && state.pinionSeg);
     setExportsEnabledPinion(pinOK);
@@ -2092,7 +2402,6 @@
       }
     }
 
-    // Gear
     ui.segListInfo2.innerHTML = "";
     const gearOK = !!(state.gearFull && state.gearTooth && state.gearSeg);
     setExportsEnabledGear(gearOK);
@@ -2120,36 +2429,54 @@
     }
   }
 
-  function updateAGMAUI(){
+  function updateStrengthUI(){
     const a = state.agma;
-    if (!a){
-      ui.agma_sigF1.textContent = "—";
-      ui.agma_sigF2.textContent = "—";
-      ui.agma_sigH.textContent  = "—";
-      ui.agma_SFs.textContent   = "—";
-      drawAGMADiagrams();
+    const i = state.iso;
+
+    if (!a && !i){
+      ui.strength_sigF1.textContent = "—";
+      ui.strength_sigF2.textContent = "—";
+      ui.strength_sigH1.textContent = "—";
+      ui.strength_sigH2.textContent = "—";
+      ui.strength_SFs.textContent   = "—";
+      drawStrengthDiagrams();
       return;
     }
 
-    ui.agma_sigF1.textContent = fmt(a.pinion.sigmaF,1) + " / " + fmt(a.pinion.sigF_allow,1);
-    ui.agma_sigF2.textContent = fmt(a.gear.sigmaF,1)   + " / " + fmt(a.gear.sigF_allow,1);
-    ui.agma_sigH.textContent  = fmt(a.mesh.sigmaH,1)   + " / " + fmt(a.mesh.sigH_allow,1);
-    ui.agma_SFs.textContent =
-      "SF₁=" + fmt(a.pinion.SFF,2) + " · " +
-      "SF₂=" + fmt(a.gear.SFF,2)   + " · " +
-      "SH="  + fmt(a.mesh.SFH,2);
+    const agF1 = a ? a.pinion.sigmaF : NaN;
+    const agF2 = a ? a.gear.sigmaF   : NaN;
+    const agFall = a ? a.pinion.sigF_allow : NaN;
+    const isF1 = i ? i.pinion.sigmaF : NaN;
+    const isF2 = i ? i.gear.sigmaF   : NaN;
+    const isFall = i ? i.pinion.sigFP : NaN;
 
-    drawAGMADiagrams();
+    ui.strength_sigF1.textContent = `${fmt(agF1,1)} / ${fmt(isF1,1)} | ${fmt(agFall,1)} / ${fmt(isFall,1)}`;
+    ui.strength_sigF2.textContent = `${fmt(agF2,1)} / ${fmt(isF2,1)} | ${fmt(agFall,1)} / ${fmt(isFall,1)}`;
+
+    const agH = a ? a.mesh.sigmaH : NaN;
+    const agHall = a ? a.mesh.sigH_allow : NaN;
+    const isH1 = i ? i.contact.sigmaH1 : NaN;
+    const isH2 = i ? i.contact.sigmaH2 : NaN;
+    const isHall = i ? i.contact.sigHP : NaN;
+
+    ui.strength_sigH1.textContent = `${fmt(agH,1)} / ${fmt(isH1,1)} | ${fmt(agHall,1)} / ${fmt(isHall,1)}`;
+    ui.strength_sigH2.textContent = `${fmt(agH,1)} / ${fmt(isH2,1)} | ${fmt(agHall,1)} / ${fmt(isHall,1)}`;
+
+    const agSFs = a ? `AGMA: SF₁=${fmt(a.pinion.SFF,2)} SF₂=${fmt(a.gear.SFF,2)} SH=${fmt(a.mesh.SFH,2)}` : "AGMA: —";
+    const isSFs = i ? `ISO: SF₁=${fmt(i.pinion.SF,2)} SF₂=${fmt(i.gear.SF,2)} SH₁=${fmt(i.contact.SH1,2)} SH₂=${fmt(i.contact.SH2,2)}` : "ISO: —";
+    ui.strength_SFs.textContent = agSFs + "  |  " + isSFs;
+
+    drawStrengthDiagrams();
   }
 
   function updateAllUI(){
     updateKeyResults();
     updateCSVInfoUI();
-    updateAGMAUI();
+    updateStrengthUI();
   }
 
   // ----------------------
-  // CSV exports (unchanged)
+  // CSV exports
   // ----------------------
   function exportProfileCSV(){
     if (!state.lastProfilePP) return;
@@ -2234,6 +2561,7 @@
   function computeAll(){
     showErr(ui.errBox, "");
     showErr(ui.agmaErr, "");
+    showErr(ui.isoErr, "");
 
     state.pinionTooth = null;
     state.pinionFull  = null;
@@ -2248,8 +2576,8 @@
       const z1 = parseInt(ui.z1.value, 10);
       const z2 = parseInt(ui.z2.value, 10);
 
-      const x1 = parseFloat(ui.x1.value);   // NEW
-      const x2 = parseFloat(ui.x2.value);   // NEW
+      const x1 = parseFloat(ui.x1.value);
+      const x2 = parseFloat(ui.x2.value);
       if (!isFinite(x1) || !isFinite(x2)) throw new Error("Profile shifts x1, x2 must be finite numbers.");
 
       const Ck = parseFloat(ui.Ck.value);
@@ -2270,12 +2598,10 @@
       if (!(isFinite(torque) && torque > 0)) throw new Error("T₁ must be > 0.");
       if (!(isFinite(b) && b > 0)) throw new Error("b must be > 0.");
 
-      // Operating geometry (correct PhD equations)
       const oper = computeOperatingFromShifts({
         m,z1,z2,alpha0:alphaRad,Ck,Cf,x1,x2,Nlo: Math.max(200, Math.min(1200, N))
       });
 
-      // Legacy rack-based geometry used to build outlines (updated ra/rf with x)
       const base = computeInvoluteLOAandProfile({m,z1,z2,alphaRad,Ck,Cf,x1,x2,N});
 
       const inter = checkOperatingInterferenceOperating(oper);
@@ -2300,18 +2626,15 @@
         const offset = 0.9;
         const rc_target = (isFinite(rc) && rc > 0) ? rc : (0.1*m);
 
-        // UPDATED: tooth thickness with profile shift (Eq 4.23) + your backlash convention
         const to = m*Math.PI;
-        const So_nom = to*0.495; // your baseline
+        const So_nom = to*0.495;
         const So1 = So_nom + 2*x1*m*Math.tan(alphaRad);
         const So2 = So_nom + 2*x2*m*Math.tan(alphaRad);
 
-        // Also improve fillet depth consistency with shift:
         const Cf1_eff = Cf - x1;
         const Cf2_eff = Cf - x2;
         if (!(Cf1_eff > 0 && Cf2_eff > 0)) throw new Error("Invalid shifts: (Cf - x) must remain > 0 for fillet/root.");
 
-        // --- Pinion build
         const fil1 = rack_fillet_v2(m, z1, xrRack, yrRack, Cf1_eff, cdel, rc_target, phir_new, offset);
 
         const x_pin = base.xPP.slice();
@@ -2344,7 +2667,6 @@
 
         const gg1 = gear_generator(x_in1, y_in1, xtr_in1, ytr_in1, z1);
 
-        // --- Gear build
         const fil2 = rack_fillet_v2(m, z2, xrRack, yrRack, Cf2_eff, cdel, rc_target, phir_new, offset);
 
         const flank2 = mapRackFlankToGear(xrRack, yrRack, alphaRad, base.ro2);
@@ -2375,7 +2697,6 @@
 
         const gg2 = gear_generator(x_in2, y_in2, xtr_in2, ytr_in2, z2);
 
-        // --- Tip thickness (SIGNED) + pointed-tooth error
         const t1 = tipThicknessSignedFromAddArc(gg1.seg.add);
         const t2 = tipThicknessSignedFromAddArc(gg2.seg.add);
 
@@ -2383,13 +2704,13 @@
         tip2 = t2.sa;
 
         if (!(isFinite(tip1) && isFinite(tip2))) {
-          throw new Error("Tip thickness computation failed (invalid addendum arc).");
+          throw new Error("Tip thickness computation failed.");
         }
         if (tip1 <= 0){
-          throw new Error(`POINTED pinion tooth (invalid): flanks intersect before addendum. Computed s_a1=${fmt(tip1,6)} mm (Δθ=${fmt(t1.dtheta,6)} rad).`);
+          throw new Error(`POINTED pinion tooth: s_a1=${fmt(tip1,6)} mm (Δθ=${fmt(t1.dtheta,6)} rad).`);
         }
         if (tip2 <= 0){
-          throw new Error(`POINTED gear tooth (invalid): flanks intersect before addendum. Computed s_a2=${fmt(tip2,6)} mm (Δθ=${fmt(t2.dtheta,6)} rad).`);
+          throw new Error(`POINTED gear tooth: s_a2=${fmt(tip2,6)} mm (Δθ=${fmt(t2.dtheta,6)} rad).`);
         }
 
         state.lastProfilePP = { x_pp: base.xPP.slice(), y_pp: base.yPP.slice() };
@@ -2427,6 +2748,9 @@
       if (ui.agmaAutoI.checked) autoComputeI();
       state.agma = computeAGMAAll();
 
+      if (ui.isoAutoY.checked) autoComputeISOY();
+      state.iso = computeISOAll();
+
       updateAllUI();
       redrawCurrentPage();
 
@@ -2453,6 +2777,7 @@
       state.gearSeg = null;
 
       state.agma = null;
+      state.iso = null;
 
       updateAllUI();
       redrawCurrentPage();
@@ -2462,7 +2787,7 @@
   }
 
   // ----------------------
-  // Navigation + redraw (unchanged)
+  // Navigation + redraw
   // ----------------------
   function setActivePage(key){
     state.activePage = key;
@@ -2479,8 +2804,8 @@
     if (state.activePage === "geometry"){
       drawGeometryDual();
       drawMeshView();
-    } else if (state.activePage === "agma"){
-      drawAGMADiagrams();
+    } else if (state.activePage === "strength"){
+      drawStrengthDiagrams();
     }
   }
 
@@ -2490,6 +2815,51 @@
     ui.zoomTxt.textContent = state.view.zoom.toFixed(2) + "×";
   }
 
+  // ----------------------
+  // AGMA + ISO recalc helpers
+  // ----------------------
+  function tryRecalcAGMA(){
+    showErr(ui.agmaErr, "");
+    try{
+      if (!state.base){
+        state.agma = null;
+        updateAllUI();
+        return;
+      }
+      if (ui.agmaAutoJ.checked) autoComputeJBoth();
+      if (ui.agmaAutoI.checked) autoComputeI();
+      state.agma = computeAGMAAll();
+      updateAllUI();
+      if (state.activePage === "strength") drawStrengthDiagrams();
+    } catch(err){
+      state.agma = null;
+      updateAllUI();
+      showErr(ui.agmaErr, 'AGMA error: <span class="mono">'+String(err.message || err)+'</span>');
+    }
+  }
+
+  function tryRecalcISO(){
+    showErr(ui.isoErr, "");
+    try{
+      if (!state.base || !state.oper){
+        state.iso = null;
+        updateAllUI();
+        return;
+      }
+      if (ui.isoAutoY.checked) autoComputeISOY();
+      state.iso = computeISOAll();
+      updateAllUI();
+      if (state.activePage === "strength") drawStrengthDiagrams();
+    } catch(err){
+      state.iso = null;
+      updateAllUI();
+      showErr(ui.isoErr, 'ISO error: <span class="mono">'+String(err.message || err)+'</span>');
+    }
+  }
+
+  // ----------------------
+  // Events
+  // ----------------------
   ui.zoom.addEventListener("input", () => {
     setZoom(parseFloat(ui.zoom.value));
     if (state.activePage === "geometry") drawMeshView();
@@ -2548,6 +2918,7 @@
   ui.btnCSV_Gear2.addEventListener("click", exportGearCSV2);
   ui.btnCSV_Segment2.addEventListener("click", exportSegmentCSV2);
 
+  // AGMA
   ui.agmaMat.addEventListener("change", () => { applyMaterialPreset(); tryRecalcAGMA(); });
   ui.agmaAutoJ.addEventListener("change", () => { if (ui.agmaAutoJ.checked) autoComputeJBoth(); tryRecalcAGMA(); });
   ui.agmaAutoI.addEventListener("change", () => { if (ui.agmaAutoI.checked) autoComputeI(); tryRecalcAGMA(); });
@@ -2588,30 +2959,59 @@
     ui.agmaYN, ui.agmaZN, ui.agmaYT, ui.agmaYZ, ui.agmaZW, ui.agmaSF, ui.agmaSH
   ].forEach(inp => inp.addEventListener("input", () => tryRecalcAGMA()));
 
-  function tryRecalcAGMA(){
-    showErr(ui.agmaErr, "");
-    try{
-      if (!state.base){
-        state.agma = null;
-        updateAllUI();
-        return;
-      }
-      if (ui.agmaAutoJ.checked) autoComputeJBoth();
-      if (ui.agmaAutoI.checked) autoComputeI();
-      state.agma = computeAGMAAll();
-      updateAllUI();
-      if (state.activePage === "agma") drawAGMADiagrams();
-    } catch(err){
-      state.agma = null;
-      updateAllUI();
-      showErr(ui.agmaErr, 'AGMA error: <span class="mono">'+String(err.message || err)+'</span>');
-    }
-  }
+  // ISO
+  ui.isoMat.addEventListener("change", () => { applyISOMaterialPreset(); tryRecalcISO(); });
+  ui.isoAutoY.addEventListener("change", () => { if (ui.isoAutoY.checked) autoComputeISOY(); tryRecalcISO(); });
+  ui.isoConservativeZeps.addEventListener("change", () => tryRecalcISO());
+  ui.btnISORecalc.addEventListener("click", () => tryRecalcISO());
+
+  ui.btnISOReset.addEventListener("click", () => {
+    ui.isoKA.value = "1.00";
+    ui.isoKv.value = "1.10";
+    ui.isoKHb.value = "1.30";
+    ui.isoKHa.value = "1.00";
+    ui.isoKFb.value = "1.30";
+    ui.isoKFa.value = "1.00";
+
+    ui.isoZN.value = "1.00";
+    ui.isoZL.value = "1.00";
+    ui.isoZR2.value = "1.00";
+    ui.isoZV.value = "1.00";
+    ui.isoZW2.value = "1.00";
+    ui.isoZX.value = "1.00";
+
+    ui.isoYST.value = "1.00";
+    ui.isoYNT.value = "1.00";
+    ui.isoYdel.value = "1.00";
+    ui.isoYR.value = "1.00";
+    ui.isoYX.value = "1.00";
+
+    ui.isoSF.value = "1.50";
+    ui.isoSH.value = "1.50";
+
+    ui.isoAutoY.checked = true;
+    ui.isoConservativeZeps.checked = true;
+
+    ui.isoMat.value = "steel250";
+    applyISOMaterialPreset();
+    autoComputeISOY();
+    tryRecalcISO();
+  });
+
+  [
+    ui.isoFlim, ui.isoHlim, ui.isoE, ui.isoNu,
+    ui.isoYF1, ui.isoYF2, ui.isoYS1, ui.isoYS2,
+    ui.isoKA, ui.isoKv, ui.isoKHb, ui.isoKHa, ui.isoKFb, ui.isoKFa,
+    ui.isoZN, ui.isoZL, ui.isoZR2, ui.isoZV, ui.isoZW2, ui.isoZX,
+    ui.isoYST, ui.isoYNT, ui.isoYdel, ui.isoYR, ui.isoYX,
+    ui.isoSF, ui.isoSH
+  ].forEach(inp => inp.addEventListener("input", () => tryRecalcISO()));
 
   window.addEventListener("resize", () => redrawCurrentPage());
 
   function init(){
     applyMaterialPreset();
+    applyISOMaterialPreset();
     setExportsEnabledPinion(false);
     setExportsEnabledGear(false);
     setZoom(1.0);
