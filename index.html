@@ -1262,7 +1262,7 @@
 
         <section class="card">
           <div class="head">
-            <h2>Rack cutting kinematics (visual)</h2>
+            <h2>Simulation — Rack cutting kinematics (rack‑generation)</h2>
             <div class="row">
               <button class="btn primary" id="cutPlay">Play</button>
               <button class="btn" id="cutReset">Reset</button>
@@ -1292,6 +1292,15 @@
                 </select>
               </div>
 
+              <div class="field" style="grid-column:1/-1;">
+                <label>Simulation zoom <span class="mono" id="cutZoomTxt">1.00×</span></label>
+                <input id="cutZoom" type="range" min="0.60" max="12.00" step="0.05" value="1.00">
+              </div>
+
+              <div class="row" style="justify-content:flex-end; grid-column:1/-1;">
+                <button class="btn" id="cutResetView">Reset view</button>
+              </div>
+
               <label class="toggle" style="grid-column:1/-1;">
                 <input type="checkbox" id="cutShowLOA" checked>
                 Show LOA (operating)
@@ -1311,7 +1320,7 @@
         </section>
 
         <section class="card">
-          <div class="head"><h2>Involute trace (equivalent view)</h2></div>
+          <div class="head"><h2>Simulation — Involute trace (local frame)</h2></div>
           <div class="canvasWrap">
             <canvas id="cvCutTrace" class="canvasXL"></canvas>
 
@@ -1434,6 +1443,9 @@
     cutSpeed: el("cutSpeed"),
     cutSpTxt: el("cutSpTxt"),
     cutView: el("cutView"),
+    cutZoom: el("cutZoom"),
+    cutZoomTxt: el("cutZoomTxt"),
+    cutResetView: el("cutResetView"),
     cutShowLOA: el("cutShowLOA"),
     cutShowRack: el("cutShowRack"),
     cutShowTrace: el("cutShowTrace"),
@@ -1563,6 +1575,9 @@
 
     view: { zoom: 1.0, panX: 0, panY: 0 },
     drag: { on:false, x0:0, y0:0, panX0:0, panY0:0 },
+
+    genView: { zoom: 1.0, panX: 0, panY: 0, _rack:null, _trace:null },
+    genDrag: { on:false, x0:0, y0:0, panX0:0, panY0:0, target:"rack" },
 
     gen: { running:false, t:0, speed:1, lastTs:0, trace:[], trace2:[] }
   };
@@ -3264,6 +3279,9 @@
   }
 
   function genMakeStylizedRackToothPolyline(m, alphaRad, Ck, Cf){
+    // Stylized rack cutter tooth (visual only):
+    // - thickness at pitch line: t = p/2
+    // - flanks at pressure angle alpha (standard rack convention)
     const p = Math.PI*m;
     const t = 0.5*p;
     const tanA = Math.tan(alphaRad);
@@ -3272,19 +3290,34 @@
     const yBot = -Cf*m;
 
     const xValL = -0.5*p;
-    const xPitchL = -0.5*t;
-    const xPitchR = +0.5*t;
     const xValR = +0.5*p;
 
-    const xTopL = xPitchL - tanA*yTop;
-    const xTopR = xPitchR + tanA*yTop;
+    const xPitchL = -0.5*t;
+    const xPitchR = +0.5*t;
+
+    // (Use converging flanks towards addendum)
+    let xTopL = xPitchL + tanA*yTop;
+    let xTopR = xPitchR - tanA*yTop;
+
+    const xBotL = xPitchL + tanA*yBot;
+    const xBotR = xPitchR - tanA*yBot;
+
+    // Prevent inverted top if extreme inputs
+    const minTop = 0.12*m;
+    if ((xTopR - xTopL) < minTop){
+      const mid = 0.5*(xTopL + xTopR);
+      xTopL = mid - 0.5*minTop;
+      xTopR = mid + 0.5*minTop;
+    }
 
     return [
       [xValL, yBot],
+      [xBotL, yBot],
       [xPitchL, 0],
       [xTopL, yTop],
       [xTopR, yTop],
       [xPitchR, 0],
+      [xBotR, yBot],
       [xValR, yBot]
     ];
   }
@@ -3340,15 +3373,28 @@
     ymax = Math.max(ymax, rackY0 + rackSpanY*0.6);
 
     const w = Math.max(1e-9, xmax-xmin), h = Math.max(1e-9, ymax-ymin);
-    const s = Math.min((cssW-2*pad)/w, (cssH-2*pad)/h);
+    const sFit = Math.min((cssW-2*pad)/w, (cssH-2*pad)/h);
+    const s = sFit * state.genView.zoom;
 
-    const cx = pad + (cssW-2*pad)/2;
-    const cy = pad + (cssH-2*pad)/2;
+    const cx = cssW/2 + state.genView.panX;
+    const cy = cssH/2 + state.genView.panY;
     const mx = 0.5*(xmin+xmax);
     const my = 0.5*(ymin+ymax);
 
+    // store current transform (for wheel-zoom anchoring)
+    state.genView._rack = {mx, my, sFit, cssW, cssH};
+
     function X(x){ return cx + (x-mx)*s; }
     function Y(y){ return cy - (y-my)*s; }
+
+    // subtle background
+    ctx.save();
+    const bg = ctx.createLinearGradient(0, 0, 0, cssH);
+    bg.addColorStop(0, "rgba(255,255,255,.03)");
+    bg.addColorStop(1, "rgba(255,255,255,.01)");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,cssW,cssH);
+    ctx.restore();
 
     function circle(r, dash, color){
       ctx.save();
@@ -3406,18 +3452,44 @@
       ctx.stroke();
       ctx.restore();
     }
-
     if (ui.cutShowRack.checked){
-      const rackTooth = genMakeStylizedRackToothPolyline(base.m, base.alphaRad, parseFloat(ui.Ck.value), parseFloat(ui.Cf.value));
+      const Ck = parseFloat(ui.Ck.value);
+      const Cf = parseFloat(ui.Cf.value);
+
+      const rackTooth = genMakeStylizedRackToothPolyline(base.m, base.alphaRad, Ck, Cf);
       const pitch = Math.PI*base.m;
-      const nTooth = 7;
+      const nTooth = 9;
+
+      // Rack "body" (bar) above the teeth (classic textbook look)
+      const yTop = Ck*base.m;
+      const bodyH = 1.15*base.m;
+      const yBodyBot = rackY0 + yTop;
+      const yBodyTop = yBodyBot + bodyH;
 
       ctx.save();
-      ctx.strokeStyle = "rgba(180,124,255,.82)";
-      ctx.lineWidth = 2.0;
-      ctx.fillStyle = "rgba(180,124,255,.06)";
+      ctx.fillStyle = "rgba(180,124,255,.07)";
+      ctx.strokeStyle = "rgba(180,124,255,.22)";
+      ctx.lineWidth = 1.25;
+      const xL = X(-999), xR = X(999);
+      const yT = Y(yBodyTop), yB = Y(yBodyBot);
+      ctx.beginPath();
+      ctx.rect(xL, yT, xR-xL, yB-yT);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // Highlight tooth closest to the current contact x-position
+      const kSel = Math.round((xC - sRack) / pitch);
+
+      ctx.save();
       for (let k=-Math.floor(nTooth/2); k<=Math.floor(nTooth/2); k++){
         const dxk = k*pitch + sRack;
+        const isActive = (k === kSel);
+
+        ctx.strokeStyle = isActive ? "rgba(180,124,255,.96)" : "rgba(180,124,255,.72)";
+        ctx.fillStyle   = isActive ? "rgba(180,124,255,.14)" : "rgba(180,124,255,.06)";
+        ctx.lineWidth   = isActive ? 2.35 : 2.0;
+
         ctx.beginPath();
         for (let i=0;i<rackTooth.length;i++){
           const xr = rackTooth[i][0] + dxk;
@@ -3430,6 +3502,7 @@
         ctx.stroke();
       }
 
+      // Pitch line of rack (reference)
       ctx.strokeStyle = "rgba(255,255,255,.10)";
       ctx.lineWidth = 1.2;
       ctx.setLineDash([6,6]);
@@ -3438,22 +3511,31 @@
       ctx.lineTo(X( 999), Y(rackY0));
       ctx.stroke();
       ctx.setLineDash([]);
+
+      // Small label
+      ctx.fillStyle = "rgba(255,255,255,.75)";
+      ctx.font = "900 11px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillText("Rack cutter (stylized)", 14, 54);
+
       ctx.restore();
     }
 
     ctx.save();
     ctx.fillStyle = "rgba(61,220,151,.95)";
-    ctx.shadowColor = "rgba(0,0,0,.55)";
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = "rgba(0,0,0,.45)";
+    ctx.shadowBlur = 6;
     ctx.beginPath();
-    ctx.arc(X(xC), Y(yC), 5.5, 0, 2*Math.PI);
+    ctx.arc(X(xC), Y(yC), 3.0, 0, 2*Math.PI);
     ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(0,0,0,.25)";
+    ctx.stroke();
     ctx.restore();
 
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.font = "900 12px " + getComputedStyle(document.body).fontFamily;
-    ctx.fillText(isGear ? "Gear-centered generation view" : "Pinion-centered generation view", 14, 18);
+    ctx.fillText(isGear ? "Simulation: gear-centered rack-generation" : "Simulation: pinion-centered rack-generation", 14, 18);
     ctx.fillStyle = "rgba(255,255,255,.70)";
     ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
     ctx.fillText(`θ≈${fmt(theta,3)} rad,  rack shift≈${fmt(sRack,2)} mm`, 14, 36);
@@ -3508,9 +3590,21 @@
 
     const pad = 22;
     const xmin = -1.15*ra, xmax = 1.15*ra, ymin = -1.15*ra, ymax = 1.15*ra;
-    const s = Math.min((cssW-2*pad)/(xmax-xmin), (cssH-2*pad)/(ymax-ymin));
-    function X(x){ return pad + (x - xmin)*s; }
-    function Y(y){ return pad + (ymax - y)*s; }
+
+    const w = Math.max(1e-9, xmax-xmin), h = Math.max(1e-9, ymax-ymin);
+    const sFit = Math.min((cssW-2*pad)/w, (cssH-2*pad)/h);
+    const s = sFit * state.genView.zoom;
+
+    const cx = cssW/2 + state.genView.panX;
+    const cy = cssH/2 + state.genView.panY;
+    const mx = 0.5*(xmin+xmax);
+    const my = 0.5*(ymin+ymax);
+
+    // store current transform (for wheel-zoom anchoring)
+    state.genView._trace = {mx, my, sFit, cssW, cssH};
+
+    function X(x){ return cx + (x-mx)*s; }
+    function Y(y){ return cy - (y-my)*s; }
 
     ctx.save();
     const g = ctx.createLinearGradient(0, 0, 0, cssH);
@@ -3564,17 +3658,20 @@
 
     ctx.save();
     ctx.fillStyle = "rgba(61,220,151,.95)";
-    ctx.shadowColor = "rgba(0,0,0,.55)";
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = "rgba(0,0,0,.45)";
+    ctx.shadowBlur = 6;
     ctx.beginPath();
-    ctx.arc(X(xL), Y(yL), 5.5, 0, 2*Math.PI);
+    ctx.arc(X(xL), Y(yL), 3.0, 0, 2*Math.PI);
     ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(0,0,0,.25)";
+    ctx.stroke();
     ctx.restore();
 
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ctx.font = "900 12px " + getComputedStyle(document.body).fontFamily;
-    ctx.fillText(isGear ? "Trace in gear-local frame" : "Trace in pinion-local frame", 14, 18);
+    ctx.fillText(isGear ? "Simulation: trace in gear-local frame" : "Simulation: trace in pinion-local frame", 14, 18);
     ctx.fillStyle = "rgba(255,255,255,.70)";
     ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
     ctx.fillText(`trace pts: ${trace.length} | phase=${fmt(state.gen.t,3)}`, 14, 36);
@@ -3886,6 +3983,13 @@
     ui.zoomTxt.textContent = state.view.zoom.toFixed(2) + "×";
   }
 
+
+  function setGenZoom(z){
+    state.genView.zoom = clamp(z, 0.60, 12.00);
+    if (ui.cutZoom) ui.cutZoom.value = String(state.genView.zoom.toFixed(2));
+    if (ui.cutZoomTxt) ui.cutZoomTxt.textContent = state.genView.zoom.toFixed(2) + "×";
+  }
+
   // ----------------------
   // AGMA + ISO recalc helpers
   // ----------------------
@@ -3996,6 +4100,84 @@
     ui.cutSpTxt.textContent = fmt(state.gen.speed, 2) + "×";
   });
   ui.cutView.addEventListener("change", () => redrawCurrentPage());
+
+  ui.cutZoom.addEventListener("input", () => {
+    setGenZoom(parseFloat(ui.cutZoom.value));
+    if (state.activePage === "generation") drawGenerationLab();
+  });
+
+  ui.cutResetView.addEventListener("click", () => {
+    state.genView.panX = 0;
+    state.genView.panY = 0;
+    setGenZoom(1.0);
+    if (state.activePage === "generation") drawGenerationLab();
+  });
+
+  function genStartDrag(target, e){
+    state.genDrag.on = true;
+    state.genDrag.target = target;
+    state.genDrag.x0 = e.clientX;
+    state.genDrag.y0 = e.clientY;
+    state.genDrag.panX0 = state.genView.panX;
+    state.genDrag.panY0 = state.genView.panY;
+  }
+
+  function genEndDrag(){ state.genDrag.on = false; }
+
+  function genDragMove(e){
+    if (!state.genDrag.on) return;
+    const dx = e.clientX - state.genDrag.x0;
+    const dy = e.clientY - state.genDrag.y0;
+    state.genView.panX = state.genDrag.panX0 + dx;
+    state.genView.panY = state.genDrag.panY0 + dy;
+    if (state.activePage === "generation") drawGenerationLab();
+  }
+
+  function genWheelZoom(target, cv, e){
+    e.preventDefault();
+    const info = (target === "trace") ? state.genView._trace : state.genView._rack;
+    const rect = cv.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    const cssW = (info && info.cssW) ? info.cssW : (cv.clientWidth || 600);
+    const cssH = (info && info.cssH) ? info.cssH : (cv.clientHeight || 300);
+    const mx = (info && isFinite(info.mx)) ? info.mx : 0;
+    const my = (info && isFinite(info.my)) ? info.my : 0;
+    const sFit = (info && isFinite(info.sFit)) ? info.sFit : 1;
+
+    const oldZ = state.genView.zoom;
+    const dir = Math.sign(e.deltaY || 0);
+    const factor = (dir > 0) ? (1/1.12) : (1.12);
+    const newZ = clamp(oldZ * factor, 0.60, 12.00);
+
+    const sOld = sFit * oldZ;
+    const sNew = sFit * newZ;
+
+    const cxOld = cssW/2 + state.genView.panX;
+    const cyOld = cssH/2 + state.genView.panY;
+
+    const xW = (px - cxOld)/Math.max(1e-12, sOld) + mx;
+    const yW = my + (cyOld - py)/Math.max(1e-12, sOld);
+
+    const cxNew = px - (xW - mx)*sNew;
+    const cyNew = py + (yW - my)*sNew;
+
+    state.genView.panX = cxNew - cssW/2;
+    state.genView.panY = cyNew - cssH/2;
+
+    setGenZoom(newZ);
+    if (state.activePage === "generation") drawGenerationLab();
+  }
+
+  ui.cvCutRack.addEventListener("mousedown", (e) => genStartDrag("rack", e));
+  ui.cvCutTrace.addEventListener("mousedown", (e) => genStartDrag("trace", e));
+  window.addEventListener("mouseup", () => genEndDrag());
+  window.addEventListener("mousemove", (e) => genDragMove(e));
+
+  ui.cvCutRack.addEventListener("wheel", (e) => genWheelZoom("rack", ui.cvCutRack, e), {passive:false});
+  ui.cvCutTrace.addEventListener("wheel", (e) => genWheelZoom("trace", ui.cvCutTrace, e), {passive:false});
+
   [ui.cutShowLOA, ui.cutShowRack, ui.cutShowTrace, ui.cutShowTarget].forEach(n => n.addEventListener("change", () => redrawCurrentPage()));
 
   ui.cutPlay.addEventListener("click", () => {
@@ -4105,6 +4287,7 @@
     setExportsEnabledPinion(false);
     setExportsEnabledGear(false);
     setZoom(1.0);
+    setGenZoom(1.0);
     genReset();
     updateAllUI();
     setActivePage("geometry");
