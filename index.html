@@ -60,6 +60,16 @@
       padding:14px;
       min-height:100vh;
     }
+    .shell.homeMode{
+      grid-template-columns: 1fr;
+    }
+    .shell.homeMode .sidebar,
+    .shell.homeMode .results{
+      display:none;
+    }
+    .shell.homeMode .main{
+      grid-column:1/-1;
+    }
     .shell.noResults{
       grid-template-columns: 320px 1fr;
     }
@@ -311,6 +321,175 @@
     .kv:last-child{ border-bottom:none; }
     .kv .k{ color:var(--muted); }
     .kv .v{ color:var(--text); font-family:var(--mono); font-weight:950; }
+
+    .homeHero{
+      padding:22px 22px 18px;
+      display:grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap:16px;
+      align-items:stretch;
+    }
+    .homeLead{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .homeKicker{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--muted2);
+    }
+    .homeTitle{
+      margin:0;
+      font-size:34px;
+      line-height:1.02;
+      font-weight:950;
+      letter-spacing:.01em;
+    }
+    .homeSub{
+      margin:0;
+      color:rgba(255,255,255,.82);
+      line-height:1.55;
+      font-size:15px;
+      max-width:72ch;
+    }
+    .homeStats{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      margin-top:6px;
+    }
+    .statCard{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:12px 12px 10px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    }
+    .statCard .v{
+      font-size:24px;
+      font-weight:950;
+      color:var(--text);
+      line-height:1.08;
+      margin-bottom:6px;
+    }
+    .statCard .k{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .homeGrid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:12px;
+    }
+    .homeTiles{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+    .homeTile{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      padding:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:160px;
+    }
+    .homeTile h3{
+      margin:0;
+      font-size:15px;
+      font-weight:950;
+    }
+    .homeTile p{
+      margin:0;
+      color:rgba(255,255,255,.78);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .homeTile .mini{
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .homeRoadmap h3,
+    .homeNotes h3{
+      margin:0 0 10px;
+      font-size:14px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .homeNotes{
+      padding:16px 18px 20px;
+    }
+    .homeRoadmap{
+      padding:16px 18px 18px;
+    }
+    .roadmapGrid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:12px;
+    }
+    .roadmapCard{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    }
+    .roadmapCard .tag{
+      display:inline-block;
+      margin-bottom:10px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,214,102,.26);
+      background:rgba(255,214,102,.08);
+      color:rgba(255,214,102,.92);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    .roadmapCard h4{
+      margin:0 0 8px;
+      font-size:14px;
+      line-height:1.25;
+    }
+    .roadmapCard p{
+      margin:0;
+      color:rgba(255,255,255,.78);
+      font-size:12.5px;
+      line-height:1.5;
+    }
+    .homeNotes .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .homeNotes .noteCard{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+    }
+    .homeNotes .noteCard p{
+      margin:0;
+      color:rgba(255,255,255,.78);
+      font-size:13px;
+      line-height:1.55;
+    }
+    @media (max-width:1280px){
+      .homeHero, .homeGrid{ grid-template-columns:1fr; }
+      .homeTiles{ grid-template-columns: repeat(2, 1fr); }
+      .roadmapGrid{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width:840px){
+      .homeStats, .homeTiles, .homeNotes .grid2, .roadmapGrid{ grid-template-columns:1fr; }
+      .homeTitle{ font-size:28px; }
+    }
 
     .footer{
       color:rgba(255,255,255,.55);
@@ -610,7 +789,8 @@
       </div>
 
       <nav class="navTop" id="navPages">
-        <button class="navbtn active" data-page="geometry">🧩 Geometry</button>
+        <button class="navbtn active" data-page="home">⌂ Home</button>
+        <button class="navbtn" data-page="geometry">🧩 Geometry</button>
         <button class="navbtn" data-page="strength">🛡️ Strength (AGMA+ISO)</button>
         <button class="navbtn" data-page="ste">📈 STE (NN)</button>
         <button class="navbtn" data-page="generation">🛠️ Generation Lab</button>
@@ -726,7 +906,139 @@
 
   <main class="main">
 
-    <section class="page active" id="pageGeometry">
+    <section class="page active" id="pageHome">
+      <section class="card">
+        <div class="homeHero">
+          <div class="homeLead">
+            <div class="homeKicker">Scientific Gear Design and Evaluation Platform</div>
+            <h1 class="homeTitle">GEARCALC PRO</h1>
+            <p class="homeSub">
+              A unified platform for involute spur gear geometry, strength assessment, STE prediction,
+              generation kinematics, theory-backed interpretation, and FEA-oriented data export.
+              The goal is not only to compute values, but to support scientifically credible design decisions.
+            </p>
+
+            <div class="homeStats">
+              <div class="statCard">
+                <div class="v">STE (NN) model with 97.5% accuracy</div>
+                <div class="k">Validated surrogate prediction for transmission-error response estimation</div>
+              </div>
+              <div class="statCard">
+                <div class="v">AGMA + ISO</div>
+                <div class="k">Integrated strength assessment workflow</div>
+              </div>
+              <div class="statCard">
+                <div class="v">FEA-ready</div>
+                <div class="k">Profile, tooth, outline and segment exports</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="homeGrid">
+        <section class="card">
+          <div class="head"><h2>Modules</h2></div>
+          <div class="body homeTiles">
+            <section class="homeTile">
+              <div class="mini">Design Core</div>
+              <h3>Geometry</h3>
+              <p>Build the involute pair, inspect operating quantities, and validate geometric feasibility.</p>
+              <button class="btn primary" data-goto="geometry">Open Geometry</button>
+            </section>
+            <section class="homeTile">
+              <div class="mini">Verification</div>
+              <h3>Strength</h3>
+              <p>Compare AGMA and ISO response in a compact engineering view with graphical outputs.</p>
+              <button class="btn primary" data-goto="strength">Open Strength</button>
+            </section>
+            <section class="homeTile">
+              <div class="mini">Surrogate Model</div>
+              <h3>STE (NN)</h3>
+              <p>Predict transmission-error response curves using the trained neural model.</p>
+              <button class="btn primary" data-goto="ste">Open STE</button>
+            </section>
+            <section class="homeTile">
+              <div class="mini">Manufacturing Insight</div>
+              <h3>Generation Lab</h3>
+              <p>Observe rack-generation kinematics and involute trace formation in a scientific visual layout.</p>
+              <button class="btn primary" data-goto="generation">Open Generation</button>
+            </section>
+            <section class="homeTile">
+              <div class="mini">Documentation</div>
+              <h3>Theory</h3>
+              <p>Review the equations, assumptions, and implementation logic behind every computation block.</p>
+              <button class="btn primary" data-goto="theory">Open Theory</button>
+            </section>
+            <section class="homeTile">
+              <div class="mini">Data Output</div>
+              <h3>Exports</h3>
+              <p>Prepare geometry data for downstream workflows including CSV-based FEA preparation.</p>
+              <button class="btn primary" data-goto="export">Open Exports</button>
+            </section>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="head"><h2>Under Development</h2></div>
+          <div class="homeRoadmap">
+          <div class="roadmapGrid">
+            <section class="roadmapCard">
+              <div class="tag">Lab Development</div>
+              <h4>Efficiency / Power Loss</h4>
+              <p>Planned module for mechanical efficiency estimation, mesh losses and operating power dissipation.</p>
+            </section>
+            <section class="roadmapCard">
+              <div class="tag">Lab Development</div>
+              <h4>Micropitting / Surface Fatigue</h4>
+              <p>Planned tribology-focused page for surface damage risk, durability indicators and contact fatigue insight.</p>
+            </section>
+            <section class="roadmapCard">
+              <div class="tag">Lab Development</div>
+              <h4>Optimization Lab</h4>
+              <p>Planned design-space exploration environment for geometry, constraints and multi-objective engineering trade-offs.</p>
+            </section>
+            <section class="roadmapCard">
+              <div class="tag">Lab Development</div>
+              <h4>Tolerance / Uncertainty / Robust Design</h4>
+              <p>Planned robustness page for tolerance propagation, uncertainty bands and sensitivity-aware design evaluation.</p>
+            </section>
+            <section class="roadmapCard">
+              <div class="tag">Lab Development</div>
+              <h4>Diagnostics / Digital Twin</h4>
+              <p>Planned condition-monitoring module for data-driven diagnostics and physics-informed gearbox health assessment.</p>
+            </section>
+          </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="head"><h2>Scientific Notes</h2></div>
+        <div class="homeNotes">
+          <div class="grid2">
+            <div class="noteCard">
+              <h3>Validation Philosophy</h3>
+              <p>
+                The platform combines analytical geometry, standardized strength calculations, visual generation mechanics,
+                and neural surrogate prediction in a single environment. This makes it suitable for classroom use,
+                lab demonstration, and early-stage engineering evaluation.
+              </p>
+            </div>
+            <div class="noteCard">
+              <h3>Recommended Starting Point</h3>
+              <p>
+                Begin with Geometry to establish a feasible gear pair, continue to Strength for standardized verification,
+                then move to STE (NN) and Generation Lab for dynamic and manufacturing insight. Use Exports only after the
+                design is considered geometrically and mechanically credible.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="pageGeometry">
       <div class="split2">
         <section class="card">
           <div class="head"><h2>Pinion</h2></div>
@@ -1882,6 +2194,7 @@
     agmaErr: el("agmaErr"),
     isoErr: el("isoErr"),
     pages: {
+      home: el("pageHome"),
       geometry: el("pageGeometry"),
       strength: el("pageStrength"),
       export: el("pageCSV"),
@@ -4870,10 +5183,12 @@
   // Navigation + redraw
   // ----------------------
   function updatePageLayout(){
+    const isHome = state.activePage === "home";
     const isGeometry = state.activePage === "geometry";
-    if (ui.resultsAside) ui.resultsAside.style.display = isGeometry ? "flex" : "none";
     const shell = document.querySelector(".shell");
-    if (shell) shell.classList.toggle("noResults", !isGeometry);
+    if (shell) shell.classList.toggle("homeMode", isHome);
+    if (ui.resultsAside) ui.resultsAside.style.display = isGeometry ? "flex" : "none";
+    if (shell) shell.classList.toggle("noResults", !isGeometry && !isHome);
   }
 
   function setActivePage(key){
@@ -5032,6 +5347,13 @@
     const btn = e.target.closest(".navbtn");
     if (!btn) return;
     const key = btn.dataset.page;
+    if (key && ui.pages[key]) setActivePage(key);
+  });
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-goto]");
+    if (!btn) return;
+    const key = btn.getAttribute("data-goto");
     if (key && ui.pages[key]) setActivePage(key);
   });
 
@@ -5255,7 +5577,7 @@
     genReset();
     updateAllUI();
     stePrefillFromMain();
-    setActivePage("geometry");
+    setActivePage("home");
     showErr(ui.errBox, "");
     showErr(ui.warnBox, "");
     showErr(ui.steErr, "");
