@@ -60,6 +60,9 @@
       padding:14px;
       min-height:100vh;
     }
+    .shell.noResults{
+      grid-template-columns: 320px 1fr;
+    }
     @media (max-width: 1180px){
       .shell{ grid-template-columns:1fr; grid-template-rows:auto auto auto auto; }
     }
@@ -166,6 +169,15 @@
       border-color:rgba(122,162,255,.40);
       box-shadow: inset 0 0 0 1px rgba(122,162,255,.18);
     }
+    .navbtn.navExport{
+      background:rgba(255,214,102,.10);
+      border-color:rgba(255,214,102,.35);
+    }
+    .navbtn.navExport.active{
+      background:rgba(255,214,102,.18);
+      border-color:rgba(255,214,102,.55);
+      box-shadow: inset 0 0 0 1px rgba(255,214,102,.28);
+    }
 
     .topActions{
       display:flex;
@@ -271,6 +283,22 @@
     @media (max-width:1180px){ .splitWide{ grid-template-columns:1fr; } }
 
     .stack{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+    .compactInputs .grid{ gap:6px; }
+    .compactInputs .field{ gap:4px; }
+    .compactInputs .field label{ font-size:11px; }
+    .compactInputs .field input, .compactInputs .field select{ padding:7px 9px; font-size:12px; border-radius:12px; }
+
+    #pageStrength .splitWide{ grid-template-columns: 1fr 1fr 1.25fr; align-items:start; }
+    #pageStrength .splitWide .stack{ display:contents; }
+    #pageStrength .canvasTall{ height:250px; }
+    @media (max-width:1480px){
+      #pageStrength .splitWide{ grid-template-columns: 1fr 1fr; }
+      #pageStrength .splitWide > .card:last-child{ grid-column:1/-1; }
+    }
+    @media (max-width:1180px){
+      #pageStrength .splitWide{ grid-template-columns:1fr; }
+      #pageStrength .splitWide > .card:last-child{ grid-column:auto; }
+    }
 
     .kv{
       display:grid;
@@ -379,6 +407,10 @@
       color:rgba(255,255,255,.70);
       font-size:12px;
       line-height:1.35;
+    }
+    .labLink{
+      font-size:13.5px;
+      font-weight:800;
     }
 
     /* ============================================================
@@ -496,35 +528,31 @@
       </div>
       <div class="loginHero">
         <div class="brandMini" style="min-width:0;">
-          <div class="kicker">Machine Elements Laboratory — School of Mechanical Engineering, NTUA</div>
+          <div class="kicker">Machine Design Laboratory — School of Mechanical Engineering, NTUA</div>
           <div class="title" style="white-space:normal;">Involute Spur Gear Suite</div>
         </div>
 
-        <h1>Geometry • Strength • Exports • Theory • Generation Lab</h1>
+        <h1>Geometry • Strength • STE (NN) • Generation Lab • Theory • Exports</h1>
         <p class="sub">
-          <b>GEARCALC PRO</b> is an educational/research tool for <b>involute spur gears</b>.
-          It includes operating geometry (\(\alpha_w\), \(a_w\), \(\varepsilon_\alpha\)), key constraint checks,
-          <b>AGMA</b> and <b>ISO 6336</b> strength calculations, <b>CSV</b> exports for FEA, and
-          a visual rack‑generation simulator for intuitive understanding.
+          <b>GEARCALC PRO</b> is an educational/research platform for <b>involute spur gears</b>.
+          It includes operating geometry, key constraint checks, <b>AGMA</b> and <b>ISO 6336</b> strength calculations,
+          a <b>STE (NN)</b> model with validated prediction accuracy of <b>97.5%</b>, a high-fidelity generation lab, full theory documentation,
+          and <b>CSV</b> exports for FEA workflows.
         </p>
-
-        <div class="note" style="margin-top:10px;">
-          <span class="pill">Note</span>
-          Login is <b>client‑side</b> (a lightweight demo gate) intended for offline use/presentations. Real security requires a backend.
-        </div>
 
         <h2 style="margin-top:14px;">What's inside</h2>
         <ul class="loginBullets">
           <li><b>Geometry:</b> base/addendum/root circles, profile shifts, tip thickness, undercut warnings.</li>
           <li><b>Strength:</b> bending & contact (AGMA) and root/contact checks (ISO 6336) with editable factors.</li>
-          <li><b>Exports:</b> profile/tooth/full outline + FEA boundary segments.</li>
+          <li><b>STE (NN):</b> neural predictor for transmission error response curves.</li>
+          <li><b>Generation Lab:</b> visualization of rack-generation and involute trace in the local frame.</li>
           <li><b>Theory:</b> full documentation of the formulas implemented in the tool (MathJax).</li>
-          <li><b>Generation Lab:</b> visualization of rack‑generation and involute trace in the local frame.</li>
+          <li><b>Exports:</b> profile/tooth/full outline + FEA boundary segments.</li>
         </ul>
 
         <div class="sep"></div>
         <div class="miniHelp">
-          © <span id="yearLogin"></span> Machine Elements Lab, NTUA — Internal academic tool
+          © <span id="yearLogin"></span> Machine Design Lab, NTUA — Internal academic tool
         </div>
       </div>
     </section>
@@ -562,7 +590,8 @@
 
         <div class="miniHelp">
           If you don’t have credentials, request them from the lab supervisors.
-          <br>Goal: fast access for demos/presentations — not a replacement for a real authentication system.
+          <br>Lab page: <a class="labLink" href="https://www.linkedin.com/company/md-lab-ntua/" target="_blank" rel="noopener noreferrer">MD-Lab NTUA on LinkedIn</a>
+          <br>Visits on this device: <span id="loginVisits">—</span>
         </div>
       </div>
     </section>
@@ -576,17 +605,17 @@
   <header class="topbar card">
     <div class="topbarInner">
       <div class="brandMini">
-        <div class="kicker">Machine Elements Laboratory — NTUA</div>
+        <div class="kicker">Machine Design Laboratory — NTUA</div>
         <div class="title">GEARCALC PRO</div>
       </div>
 
       <nav class="navTop" id="navPages">
         <button class="navbtn active" data-page="geometry">🧩 Geometry</button>
         <button class="navbtn" data-page="strength">🛡️ Strength (AGMA+ISO)</button>
-        <button class="navbtn" data-page="export">💾 Exports</button>
-        <button class="navbtn" data-page="theory">📘 Theory</button>
-        <button class="navbtn" data-page="generation">🛠️ Generation Lab</button>
         <button class="navbtn" data-page="ste">📈 STE (NN)</button>
+        <button class="navbtn" data-page="generation">🛠️ Generation Lab</button>
+        <button class="navbtn" data-page="theory">📘 Theory</button>
+        <button class="navbtn navExport" data-page="export">💾 Exports</button>
       </nav>
 
       <div class="topActions">
@@ -603,7 +632,7 @@
 
   <aside class="sidebar">
     <section class="card">
-      <div class="head"><h2>Inputs</h2></div>
+      <div class="head"><h2>Inputs</h2><button class="btn primary" id="btnComputeSide">Compute All</button></div>
       <div class="body">
         <div class="grid">
           <div class="field">
@@ -653,7 +682,7 @@
 
           <div class="field">
             <label>Face width b (mm)</label>
-            <input id="b" type="number" step="0.1" value="20">
+            <input id="b" type="number" step="0.1" value="30">
           </div>
 
           <div class="field">
@@ -663,7 +692,7 @@
 
           <div class="field">
             <label>Speed n₁ (rpm)</label>
-            <input id="rpm" type="number" step="1" value="3000">
+            <input id="rpm" type="number" step="1" value="1500">
           </div>
           <div class="field">
             <label>Torque T₁ (Nm)</label>
@@ -682,7 +711,7 @@
 
         <div class="field">
           <label>Mesh zoom <span class="mono" id="zoomTxt">1.00×</span></label>
-          <input id="zoom" type="range" min="0.60" max="12.00" step="0.05" value="1.00">
+          <input id="zoom" type="range" min="0.60" max="25.00" step="0.05" value="1.00">
         </div>
 
         <div class="row" style="justify-content:flex-end;">
@@ -715,9 +744,25 @@
       </div>
 
       <section class="card">
-        <div class="head"><h2>Mesh preview</h2></div>
+        <div class="head">
+          <h2>Mesh preview</h2>
+          <div class="row">
+            <button class="btn primary" id="meshAnimToggle">Play mesh</button>
+            <button class="btn" id="meshAnimReset">Reset</button>
+          </div>
+        </div>
         <div class="canvasWrap">
           <canvas id="cvMesh" class="canvasMesh"></canvas>
+          <div class="grid" style="align-items:end;">
+            <div class="field">
+              <label>Mesh phase <span class="mono" id="meshPhaseTxt">0.000</span></label>
+              <input id="meshPhase" type="range" min="0" max="1" step="0.001" value="0">
+            </div>
+            <div class="field">
+              <label>Animation speed <span class="mono" id="meshSpeedTxt">1.00x</span></label>
+              <input id="meshSpeed" type="range" min="0.02" max="4.00" step="0.02" value="1.00">
+            </div>
+          </div>
         </div>
       </section>
     </section>
@@ -736,7 +781,7 @@
               </div>
             </div>
 
-            <div class="body">
+            <div class="body compactInputs">
               <div class="grid">
                 <div class="field">
                   <label>Material preset</label>
@@ -813,7 +858,7 @@
               </div>
             </div>
 
-            <div class="body">
+            <div class="body compactInputs">
               <div class="grid">
                 <div class="field">
                   <label>Material preset</label>
@@ -1426,7 +1471,28 @@
             If you want a more faithful “Method B”, these factors can be computed from the generated root/fillet geometry.
           </div>
 
-          <h2>10) What the program does (workflow)</h2>
+          <h2>10) STE and neural model (NN)</h2>
+          <p>
+            The STE page predicts mesh-response curves with a trained neural surrogate model.
+            The geometry and checks remain physics-based; the neural model accelerates the response estimation.
+          </p>
+          <div class="eq">
+            \[
+              \mathbf{y}(x)=f_{\theta}(\mathbf{q},x)
+            \]
+          </div>
+          <p>
+            Here \(\mathbf{q}\) is the feature vector (geometry, material, load ratios), \(x\) is normalized mesh position,
+            and \(f_{\theta}\) is the trained network.
+          </p>
+          <ul>
+            <li><b>Inputs:</b> teeth counts, profile coefficients, material/load ratios, and operating deltas.</li>
+            <li><b>Outputs:</b> STE_bar, STE_phi_mid, STE_phi_2, and equivalent stiffness trend.</li>
+            <li><b>Range check:</b> out-of-training-domain features are flagged in the UI.</li>
+            <li><b>Role:</b> fast screening and trend estimation before high-fidelity simulation.</li>
+          </ul>
+
+          <h2>11) What the program does (workflow)</h2>
           <ul>
             <li>Reads inputs \(m,\alpha,z_1,z_2,x_1,x_2,C_k,C_f\) and builds the main circles.</li>
             <li>Computes \(\alpha_w\) via the involute relation, then \(a_w\), \(L\), \(\varepsilon_\alpha\).</li>
@@ -1549,6 +1615,15 @@
             </div>
           </div>
           <div class="body">
+            <div class="field" style="margin-bottom:10px;">
+              <label>Primary display curve</label>
+              <select id="steCurveType">
+                <option value="ste_bar" selected>STE_bar</option>
+                <option value="ste_phi_mid">STE_phi_mid [rad]</option>
+                <option value="ste_phi_2">STE_phi_2 [rad]</option>
+                <option value="g_nmm_per_rad">G [Nmm/rad]</option>
+              </select>
+            </div>
             <div class="grid">
               <div class="field"><label>z₁</label><input id="ste_z1" type="number" step="1" value="50"></div>
               <div class="field"><label>z₂</label><input id="ste_z2" type="number" step="1" value="50"></div>
@@ -1578,15 +1653,7 @@
               <div class="field"><label>m [mm]</label><input id="ste_m" type="number" step="0.01" value="3.00"></div>
 
               <div class="field"><label>x points</label><input id="ste_x_points" type="number" step="1" value="1000"></div>
-              <div class="field">
-                <label>Curve to display</label>
-                <select id="steCurveType">
-                  <option value="ste_bar" selected>STE_bar</option>
-                  <option value="ste_phi_mid">STE_phi_mid [rad]</option>
-                  <option value="ste_phi_2">STE_phi_2 [rad]</option>
-                  <option value="g_nmm_per_rad">G [Nmm/rad]</option>
-                </select>
-              </div>
+              <div class="field"><label>Plot smoothing</label><input id="steSmooth" type="number" step="1" min="0" max="15" value="0"></div>
             </div>
 
             <div class="sep"></div>
@@ -1617,44 +1684,32 @@
 
     <div class="footer">
       <div class="copy">© <span id="year"></span> Machine Design Lab, NTUA — GEARCALC PRO</div>
-      <div class="copy">Geometry • Strength (AGMA+ISO) • Exports • Theory • Generation Lab • STE (NN)</div>
+      <div class="copy">Geometry • Strength (AGMA+ISO) • STE (NN) • Generation Lab • Theory • Exports</div>
     </div>
 
   </main>
 
-  <aside class="results">
+  <aside class="results" id="resultsAside">
     <section class="card">
       <div class="head"><h2>Key results</h2></div>
       <div class="body">
-
-        <div class="kv"><div class="k">Operating pressure angle α<sub>w</sub> [deg]</div><div class="v" id="res_aw">—</div></div>
-        <div class="kv"><div class="k">Center distance a<sub>12</sub> [mm]</div><div class="v" id="res_a12">—</div></div>
-
-        <div class="sep"></div>
-
-        <div class="kv"><div class="k">Contact ratio ε<sub>α</sub></div><div class="v" id="res_eps">—</div></div>
-        <div class="kv"><div class="k">Contact path L<sub>LOA</sub> [mm]</div><div class="v" id="res_loa">—</div></div>
-
-        <div class="sep"></div>
-
-        <div class="kv"><div class="k">d₀ (pinion / gear) [mm]</div><div class="v" id="res_d0">—</div></div>
-        <div class="kv"><div class="k">d<sub>g</sub> base (pinion / gear) [mm]</div><div class="v" id="res_dg">—</div></div>
-        <div class="kv"><div class="k">d<sub>b</sub> working (pinion / gear) [mm]</div><div class="v" id="res_db">—</div></div>
-        <div class="kv"><div class="k">d<sub>k</sub> tip (pinion / gear) [mm]</div><div class="v" id="res_dk">—</div></div>
-        <div class="kv"><div class="k">d<sub>f</sub> root (pinion / gear) [mm]</div><div class="v" id="res_df">—</div></div>
-
-        <div class="sep"></div>
-
-        <div class="kv"><div class="k">Tip thickness s<sub>a1</sub> (pinion) [mm]</div><div class="v" id="res_tip1">—</div></div>
-        <div class="kv"><div class="k">Tip thickness s<sub>a2</sub> (gear) [mm]</div><div class="v" id="res_tip2">—</div></div>
-
+        <div class="kv"><div class="k">AGMA check</div><div class="v" id="res_agma">—</div></div>
+        <div class="kv"><div class="k">ISO check</div><div class="v" id="res_iso">—</div></div>
         <div class="kv"><div class="k">Operating interference</div><div class="v" id="res_interf">—</div></div>
         <div class="kv"><div class="k">Undercut (rack-gen)</div><div class="v" id="res_uc">—</div></div>
 
         <div class="sep"></div>
 
-        <div class="kv"><div class="k">AGMA result</div><div class="v" id="res_agma">—</div></div>
-        <div class="kv"><div class="k">ISO result</div><div class="v" id="res_iso">—</div></div>
+        <div class="kv"><div class="k">Contact ratio ε<sub>α</sub></div><div class="v" id="res_eps">—</div></div>
+        <div class="kv"><div class="k">Contact path L<sub>LOA</sub> [mm]</div><div class="v" id="res_loa">—</div></div>
+        <div class="kv"><div class="k">Center distance a<sub>12</sub> [mm]</div><div class="v" id="res_a12">—</div></div>
+        <div class="kv"><div class="k">Operating pressure angle α<sub>w</sub> [deg]</div><div class="v" id="res_aw">—</div></div>
+        <div class="kv"><div class="k">d₀ [mm]</div><div class="v" id="res_d0">—</div></div>
+        <div class="kv"><div class="k">d<sub>g</sub> base [mm]</div><div class="v" id="res_dg">—</div></div>
+        <div class="kv"><div class="k">d<sub>b</sub> working [mm]</div><div class="v" id="res_db">—</div></div>
+        <div class="kv"><div class="k">d<sub>k</sub> tip [mm]</div><div class="v" id="res_dk">—</div></div>
+        <div class="kv"><div class="k">d<sub>f</sub> root [mm]</div><div class="v" id="res_df">—</div></div>
+        <div class="kv"><div class="k">Tip thickness s<sub>a</sub> [mm]</div><div class="v" id="res_tip">—</div></div>
 
         <div class="sep"></div>
         <div class="err" id="warnBox"></div>
@@ -1684,6 +1739,7 @@
   };
 
   const AUTH_KEY = "GEARCALC_PRO_AUTH_USER_V1";
+  const VISIT_KEY = "GEARCALC_PRO_VISITS_V1";
 
   const auth = {
     loginRoot: el("loginRoot"),
@@ -1697,8 +1753,20 @@
     badge: el("userBadge"),
     badgeTxt: el("userNameTxt"),
     logout: el("btnLogout"),
-    yearLogin: el("yearLogin")
+    yearLogin: el("yearLogin"),
+    visits: el("loginVisits")
   };
+
+  function bumpVisitCounter(){
+    let n = 0;
+    try{
+      n = parseInt(localStorage.getItem(VISIT_KEY) || "0", 10);
+      if (!isFinite(n) || n < 0) n = 0;
+      n += 1;
+      localStorage.setItem(VISIT_KEY, String(n));
+    }catch(e){}
+    if (auth.visits) auth.visits.textContent = String(n || 1);
+  }
 
   function authSetErr(msg){
     if(!auth.err) return;
@@ -1793,6 +1861,7 @@
   if(auth.logout) auth.logout.addEventListener("click", authDoLogout);
 
   // If already signed in, go straight to app
+  bumpVisitCounter();
   const _u = authGetStoredUser();
   if(_u && AUTH_PROFILES[_u]) authShowApp(_u);
   else authShowLogin("");
@@ -1805,10 +1874,11 @@
     rpm: el("rpm"), torque: el("torque"),
     showGear: el("showGear"), showLOA: el("showLOA"),
     zoom: el("zoom"), zoomTxt: el("zoomTxt"), btnResetView: el("btnResetView"),
-    btnCompute: el("btnCompute"), btnRedraw: el("btnRedraw"),
+    btnCompute: el("btnCompute"), btnComputeSide: el("btnComputeSide"), btnRedraw: el("btnRedraw"),
     navPages: el("navPages"),
     errBox: el("errBox"),
     warnBox: el("warnBox"),
+    resultsAside: el("resultsAside"),
     agmaErr: el("agmaErr"),
     isoErr: el("isoErr"),
     pages: {
@@ -1821,6 +1891,12 @@
     },
 
     cvMesh: el("cvMesh"),
+    meshAnimToggle: el("meshAnimToggle"),
+    meshAnimReset: el("meshAnimReset"),
+    meshPhase: el("meshPhase"),
+    meshPhaseTxt: el("meshPhaseTxt"),
+    meshSpeed: el("meshSpeed"),
+    meshSpeedTxt: el("meshSpeedTxt"),
     cvPinion: el("cvPinion"),
     cvGear: el("cvGear"),
     cvAGMAPinion: el("cvAGMAPinion"),
@@ -1869,6 +1945,7 @@
     ste_da12_to_m: el("ste_da12_to_m"),
     ste_m: el("ste_m"),
     ste_x_points: el("ste_x_points"),
+    steSmooth: el("steSmooth"),
     ste_sy_ref: el("ste_sy_ref"),
     ste_status: el("ste_status"),
     ste_range: el("ste_range"),
@@ -1886,8 +1963,7 @@
     res_db: el("res_db"),
     res_dk: el("res_dk"),
     res_df: el("res_df"),
-    res_tip1: el("res_tip1"),
-    res_tip2: el("res_tip2"),
+    res_tip: el("res_tip"),
     res_interf: el("res_interf"),
     res_uc: el("res_uc"),
     res_agma: el("res_agma"),
@@ -2001,6 +2077,7 @@
     ste: null,
 
     view: { zoom: 1.0, panX: 0, panY: 0 },
+    meshAnim: { running:false, t:0, speed:1, lastTs:0 },
     drag: { on:false, x0:0, y0:0, panX0:0, panY0:0 },
 
     genView: { zoom: 1.0, panX: 0, panY: 0, _rack:null, _trace:null },
@@ -2214,15 +2291,53 @@
     };
   }
 
-  function checkManufacturingUndercut(z, alphaRad, Cf, Cc, x){
+  function xMaxEq21(z){
+    if (z >= 6 && z <= 10) return 0.60;
+    if (z > 10 && z <= 50) return 0.50 - 0.01*z;
+    if (z > 50) return 1.00;
+    return NaN;
+  }
+  function xMaxEq22(z){
+    if (z >= 6 && z <= 12) return 0.05*(18 - z);
+    if (z > 12 && z <= 20) return 0.0375*(20 - z);
+    if (z > 20 && z <= 50) return (z - 20)/60;
+    if (z > 50) return 0.50;
+    return NaN;
+  }
+  function checkGeometryConstraints({z, alphaRad, Cf, Cc, x, cs}){
     const sinA = Math.sin(alphaRad);
-    const denom = sinA*sinA;
-    if (!(denom > 1e-15)) return { Zmin: Infinity, Cc, x, hasUndercut: true };
+    const tanA = Math.tan(alphaRad);
+    const cosA = Math.cos(alphaRad);
+    const den20 = Math.max(1e-12, sinA*sinA);
 
-    const Cf_eff = Cf - x;
-    const Zmin = 2 * (Cf_eff - Cc*(1 - sinA)) / denom;
-    const hasUndercut = z < (Zmin - 1e-9);
-    return { Zmin, Cc, x, hasUndercut };
+    // Eq. (20): z_min with profile shift.
+    const zMin20 = 2*(1 - x) / den20;
+    const zOk = z >= (zMin20 - 1e-9);
+
+    // Eq. (21) and Eq. (22): profile-shift upper limits (no lower limit enforced).
+    const xMax21 = xMaxEq21(z);
+    const xMax22 = xMaxEq22(z);
+    const xMax = (isFinite(xMax21) && isFinite(xMax22)) ? Math.min(xMax21, xMax22)
+      : (isFinite(xMax21) ? xMax21 : xMax22);
+    const xOk = isFinite(xMax) ? x <= (xMax + 1e-9) : true;
+
+    // Eq. (23): Cf max from c_s.
+    const CfMax23 = ((1 - cs) * Math.PI) / (2*Math.max(1e-12, tanA));
+    const cfOk = Cf <= (CfMax23 + 1e-9);
+
+    // Eq. (24): Cc max from c_s and Cf.
+    const den24 = cosA - (1 - sinA)*tanA;
+    const CcMax24 = (((1 - cs)*Math.PI/2) - Cf*tanA) / Math.max(1e-12, den24);
+    const ccOk = Cc <= (CcMax24 + 1e-9);
+
+    return {
+      zMin20, zOk,
+      xMax21, xMax22, xMax, xOk,
+      CfMax23, cfOk,
+      CcMax24, ccOk,
+      hasUndercut: !zOk,
+      cs, Cc, Cf, x
+    };
   }
 
   // ----------------------
@@ -2752,7 +2867,8 @@
     const base = state.base;
     const oper = state.oper;
     const a_w = oper.a12;
-    const gearRot = Math.PI + (Math.PI / base.z2);
+    const pinRot = -2*Math.PI*state.meshAnim.t;
+    const gearRot = (Math.PI + (Math.PI / base.z2)) - pinRot*(base.z1/base.z2);
 
     function transformXY(x, y, rot, tx, ty){
       const c = Math.cos(rot), s = Math.sin(rot);
@@ -2761,7 +2877,7 @@
 
     const pinPts = [];
     for (let i=0;i<state.pinionFull.x_tot.length;i++){
-      pinPts.push([state.pinionFull.x_tot[i], state.pinionFull.y_tot[i]]);
+      pinPts.push(transformXY(state.pinionFull.x_tot[i], state.pinionFull.y_tot[i], pinRot, 0, 0));
     }
 
     const gearPts = [];
@@ -2852,10 +2968,10 @@
     drawPolyline(pinPts, "rgba(122,162,255,.95)");
     drawPolyline(gearPts, "rgba(255,107,107,.95)");
 
-    if (ui.showLOA.checked && oper){
+    if (oper){
       ctx.save();
       ctx.strokeStyle = "rgba(61,220,151,.80)";
-      ctx.lineWidth = 2.0;
+      ctx.lineWidth = 2.3;
       ctx.beginPath();
       for (let i=0;i<oper.xLOA.length;i++){
         const px = X(oper.xLOA[i]);
@@ -2864,8 +2980,36 @@
       }
       ctx.stroke();
       ctx.restore();
+
+      // Keep LOA static in geometry preview (no moving marker).
     }
   }
+
+  function meshAnimStep(ts){
+    if (!state.meshAnim.running){ state.meshAnim.lastTs = 0; return; }
+    if (!state.meshAnim.lastTs) state.meshAnim.lastTs = ts;
+    const dt = Math.max(0, (ts - state.meshAnim.lastTs) / 1000);
+    state.meshAnim.lastTs = ts;
+    let t = state.meshAnim.t + dt*0.18*state.meshAnim.speed;
+    if (t > 1) t -= 1;
+    state.meshAnim.t = clamp(t, 0, 1);
+    if (ui.meshPhase) ui.meshPhase.value = String(state.meshAnim.t.toFixed(3));
+    if (ui.meshPhaseTxt) ui.meshPhaseTxt.textContent = fmt(state.meshAnim.t, 3);
+    if (state.activePage === "geometry") drawMeshView();
+    if (state.meshAnim.running) requestAnimationFrame(meshAnimStep);
+  }
+  function meshAnimStart(){
+    state.meshAnim.running = true;
+    if (ui.meshAnimToggle) ui.meshAnimToggle.textContent = "Pause mesh";
+    state.meshAnim.lastTs = 0;
+    requestAnimationFrame(meshAnimStep);
+  }
+  function meshAnimStop(){
+    state.meshAnim.running = false;
+    if (ui.meshAnimToggle) ui.meshAnimToggle.textContent = "Play mesh";
+    state.meshAnim.lastTs = 0;
+  }
+  function meshAnimToggle(){ if (state.meshAnim.running) meshAnimStop(); else meshAnimStart(); }
 
   // ----------------------
   // AGMA + ISO + strength diagrams + exports + generation lab + compute + events
@@ -3237,8 +3381,8 @@
 
     const gxB = rect.x + rect.w*0.32;
     const gxC = rect.x + rect.w*0.74;
-    const barW = Math.min(56, rect.w*0.14);
-    const off  = barW*0.35;
+    const barW = Math.min(44, rect.w*0.11);
+    const off  = barW*0.82;
 
     function bar(xCenter, v, ok, color){
       const x = xCenter - barW/2;
@@ -3299,29 +3443,29 @@
 
     if (agmaMember){
       bar(gxB - off, agmaMember.sigmaF, agmaMember.passF, "rgba(122,162,255,.82)");
-      allowLine(gxB, agmaMember.sigF_allow, false);
+      allowLine(gxB - off, agmaMember.sigF_allow, false);
       tag(gxB - off, Y(agmaMember.sigmaF)-6, "σF=" + fmt(agmaMember.sigmaF,0), "rgba(122,162,255,.95)");
-      tag(gxB, Y(agmaMember.sigF_allow)-6, "allow(A)=" + fmt(agmaMember.sigF_allow,0), "rgba(61,220,151,.92)");
+      tag(gxB - off, Y(agmaMember.sigF_allow)-6, "allow(A)=" + fmt(agmaMember.sigF_allow,0), "rgba(61,220,151,.92)");
     }
     if (isoMember){
       bar(gxB + off, isoMember.sigmaF, isoMember.pass, "rgba(180,124,255,.82)");
-      allowLine(gxB, isoMember.sig_allow, true);
+      allowLine(gxB + off, isoMember.sig_allow, true);
       tag(gxB + off, Y(isoMember.sigmaF)-6, "σF=" + fmt(isoMember.sigmaF,0), "rgba(180,124,255,.95)");
-      tag(gxB, Y(isoMember.sig_allow)-18, "allow(I)=" + fmt(isoMember.sig_allow,0), "rgba(61,220,151,.92)");
+      tag(gxB + off, Y(isoMember.sig_allow)-18, "allow(I)=" + fmt(isoMember.sig_allow,0), "rgba(61,220,151,.92)");
     }
     bottomLabel(gxB, "Bending");
 
     if (agmaMesh){
       bar(gxC - off, agmaMesh.sigmaH, agmaMesh.passH, "rgba(122,162,255,.82)");
-      allowLine(gxC, agmaMesh.sigH_allow, false);
+      allowLine(gxC - off, agmaMesh.sigH_allow, false);
       tag(gxC - off, Y(agmaMesh.sigmaH)-6, "σH=" + fmt(agmaMesh.sigmaH,0), "rgba(122,162,255,.95)");
-      tag(gxC, Y(agmaMesh.sigH_allow)-6, "allow(A)=" + fmt(agmaMesh.sigH_allow,0), "rgba(61,220,151,.92)");
+      tag(gxC - off, Y(agmaMesh.sigH_allow)-6, "allow(A)=" + fmt(agmaMesh.sigH_allow,0), "rgba(61,220,151,.92)");
     }
     if (isoContactForMember){
       bar(gxC + off, isoContactForMember.sigmaH, isoContactForMember.pass, "rgba(180,124,255,.82)");
-      allowLine(gxC, isoContactForMember.sig_allow, true);
+      allowLine(gxC + off, isoContactForMember.sig_allow, true);
       tag(gxC + off, Y(isoContactForMember.sigmaH)-6, "σH=" + fmt(isoContactForMember.sigmaH,0), "rgba(180,124,255,.95)");
-      tag(gxC, Y(isoContactForMember.sig_allow)-18, "allow(I)=" + fmt(isoContactForMember.sig_allow,0), "rgba(61,220,151,.92)");
+      tag(gxC + off, Y(isoContactForMember.sig_allow)-18, "allow(I)=" + fmt(isoContactForMember.sig_allow,0), "rgba(61,220,151,.92)");
     }
     bottomLabel(gxC, "Contact");
 
@@ -3375,12 +3519,9 @@
 
   function undercutLabel(qc){
     if (!qc || !qc.uc1 || !qc.uc2) return {txt:"—", color:""};
-    const u1 = qc.uc1.hasUndercut;
-    const u2 = qc.uc2.hasUndercut;
-    if (!u1 && !u2) return {txt:"OK", color:"var(--green)"};
-    if (u1 && u2) return {txt:"UNDERCUT (both)", color:"var(--red)"};
-    if (u1) return {txt:"UNDERCUT (pinion)", color:"var(--red)"};
-    return {txt:"UNDERCUT (gear)", color:"var(--red)"};
+    const allOk = qc.uc1.zOk && qc.uc2.zOk && qc.uc1.xOk && qc.uc2.xOk && qc.uc1.cfOk && qc.uc2.cfOk && qc.uc1.ccOk && qc.uc2.ccOk;
+    if (allOk) return {txt:"OK", color:"var(--green)"};
+    return {txt:"LIMIT VIOLATION", color:"var(--red)"};
   }
 
   function buildWarningsHTML(){
@@ -3406,11 +3547,29 @@
       msgs.push(`⚠️ Operating interference detected: contact goes below base circle for ${parts.join(" and ")}.`);
     }
 
-    if (qc.uc1 && qc.uc1.hasUndercut){
-      msgs.push(`⚠️ Manufacturing undercut likely (pinion): <span class="mono">z₁=${base.z1}</span> < <span class="mono">Zmin=${fmt(qc.uc1.Zmin,2)}</span> (with <span class="mono">x₁=${fmt(qc.uc1.x,2)}</span>, <span class="mono">C<sub>c</sub>=${fmt(qc.uc1.Cc,2)}</span>).`);
+    if (qc.uc1 && !qc.uc1.zOk){
+      msgs.push(`⚠️ Eq(20) violation (pinion): <span class="mono">z₁=${base.z1}</span> is below <span class="mono">zmin=${fmt(qc.uc1.zMin20,2)}</span>.`);
     }
-    if (qc.uc2 && qc.uc2.hasUndercut){
-      msgs.push(`⚠️ Manufacturing undercut likely (gear): <span class="mono">z₂=${base.z2}</span> < <span class="mono">Zmin=${fmt(qc.uc2.Zmin,2)}</span> (with <span class="mono">x₂=${fmt(qc.uc2.x,2)}</span>, <span class="mono">C<sub>c</sub>=${fmt(qc.uc2.Cc,2)}</span>).`);
+    if (qc.uc2 && !qc.uc2.zOk){
+      msgs.push(`⚠️ Eq(20) violation (gear): <span class="mono">z₂=${base.z2}</span> is below <span class="mono">zmin=${fmt(qc.uc2.zMin20,2)}</span>.`);
+    }
+    if (qc.uc1 && !qc.uc1.xOk){
+      msgs.push(`⚠️ Eq(21/22) violation (pinion): <span class="mono">x₁=${fmt(qc.uc1.x,3)}</span> exceeds <span class="mono">x_max=${fmt(qc.uc1.xMax,3)}</span>.`);
+    }
+    if (qc.uc2 && !qc.uc2.xOk){
+      msgs.push(`⚠️ Eq(21/22) violation (gear): <span class="mono">x₂=${fmt(qc.uc2.x,3)}</span> exceeds <span class="mono">x_max=${fmt(qc.uc2.xMax,3)}</span>.`);
+    }
+    if (qc.uc1 && !qc.uc1.cfOk){
+      msgs.push(`⚠️ Eq(23) violation (pinion): <span class="mono">Cf=${fmt(qc.uc1.Cf,3)}</span> exceeds <span class="mono">Cf_max=${fmt(qc.uc1.CfMax23,3)}</span>.`);
+    }
+    if (qc.uc2 && !qc.uc2.cfOk){
+      msgs.push(`⚠️ Eq(23) violation (gear): <span class="mono">Cf=${fmt(qc.uc2.Cf,3)}</span> exceeds <span class="mono">Cf_max=${fmt(qc.uc2.CfMax23,3)}</span>.`);
+    }
+    if (qc.uc1 && !qc.uc1.ccOk){
+      msgs.push(`⚠️ Eq(24) violation (pinion): <span class="mono">Cc=${fmt(qc.uc1.Cc,3)}</span> exceeds <span class="mono">Cc_max=${fmt(qc.uc1.CcMax24,3)}</span>.`);
+    }
+    if (qc.uc2 && !qc.uc2.ccOk){
+      msgs.push(`⚠️ Eq(24) violation (gear): <span class="mono">Cc=${fmt(qc.uc2.Cc,3)}</span> exceeds <span class="mono">Cc_max=${fmt(qc.uc2.CcMax24,3)}</span>.`);
     }
 
     if (msgs.length === 0) return "";
@@ -3446,8 +3605,9 @@
       const tip1 = state.qc.tip1;
       const tip2 = state.qc.tip2;
 
-      setVal(ui.res_tip1, isFinite(tip1) ? fmt(tip1, 3) : "—", (isFinite(tip1) && tip1 < thr) ? "var(--red)" : "");
-      setVal(ui.res_tip2, isFinite(tip2) ? fmt(tip2, 3) : "—", (isFinite(tip2) && tip2 < thr) ? "var(--red)" : "");
+      const tipWarn = (isFinite(tip1) && tip1 < thr) || (isFinite(tip2) && tip2 < thr);
+      const tipTxt = `${isFinite(tip1) ? fmt(tip1, 3) : "—"} / ${isFinite(tip2) ? fmt(tip2, 3) : "—"}`;
+      setVal(ui.res_tip, tipTxt, tipWarn ? "var(--red)" : "");
 
       const inter = state.qc.inter;
       if (inter && (inter.pinionInterference || inter.gearInterference)){
@@ -3462,8 +3622,7 @@
       setVal(ui.res_uc, u.txt, u.color);
 
     } else {
-      setVal(ui.res_tip1, "—");
-      setVal(ui.res_tip2, "—");
+      setVal(ui.res_tip, "—");
       setVal(ui.res_interf, "—");
       setVal(ui.res_uc, "—");
     }
@@ -3856,8 +4015,8 @@
       const dx = Math.cos(alphaW), dy = -Math.sin(alphaW);
       const L = 3.0*ra;
       ctx.save();
-      ctx.strokeStyle = "rgba(61,220,151,.55)";
-      ctx.lineWidth = 2.0;
+      ctx.strokeStyle = "rgba(61,220,151,.78)";
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.moveTo(X(px - L*dx), Y(py - L*dy));
       ctx.lineTo(X(px + L*dx), Y(py + L*dy));
@@ -3869,7 +4028,7 @@
     if (full){
       ctx.save();
       ctx.strokeStyle = isGear ? "rgba(255,107,107,.95)" : "rgba(122,162,255,.95)";
-      ctx.lineWidth = 2.25;
+      ctx.lineWidth = 2.6;
       ctx.beginPath();
       for (let i=0;i<full.x_tot.length;i++){
         const [xx,yy] = rotateXY(full.x_tot[i], full.y_tot[i], theta);
@@ -3885,7 +4044,7 @@
 
       const rackTooth = genMakeStylizedRackToothPolyline(base.m, base.alphaRad, Ck, Cf);
       const pitch = Math.PI*base.m;
-      const nTooth = 9;
+      const nTooth = 13;
 
       // Rack "body" (bar) above the teeth (classic textbook look)
       const yTop = Ck*base.m;
@@ -3894,9 +4053,9 @@
       const yBodyTop = yBodyBot + bodyH;
 
       ctx.save();
-      ctx.fillStyle = "rgba(180,124,255,.07)";
-      ctx.strokeStyle = "rgba(180,124,255,.22)";
-      ctx.lineWidth = 1.25;
+      ctx.fillStyle = "rgba(180,124,255,.12)";
+      ctx.strokeStyle = "rgba(180,124,255,.36)";
+      ctx.lineWidth = 1.45;
       const xL = X(-999), xR = X(999);
       const yT = Y(yBodyTop), yB = Y(yBodyBot);
       ctx.beginPath();
@@ -3913,9 +4072,9 @@
         const dxk = k*pitch + sRack;
         const isActive = (k === kSel);
 
-        ctx.strokeStyle = isActive ? "rgba(180,124,255,.96)" : "rgba(180,124,255,.72)";
-        ctx.fillStyle   = isActive ? "rgba(180,124,255,.14)" : "rgba(180,124,255,.06)";
-        ctx.lineWidth   = isActive ? 2.35 : 2.0;
+        ctx.strokeStyle = isActive ? "rgba(180,124,255,.98)" : "rgba(180,124,255,.78)";
+        ctx.fillStyle   = isActive ? "rgba(180,124,255,.22)" : "rgba(180,124,255,.09)";
+        ctx.lineWidth   = isActive ? 2.7 : 2.2;
 
         ctx.beginPath();
         for (let i=0;i<rackTooth.length;i++){
@@ -3950,9 +4109,9 @@
     ctx.save();
     ctx.fillStyle = "rgba(61,220,151,.95)";
     ctx.shadowColor = "rgba(0,0,0,.45)";
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = 9;
     ctx.beginPath();
-    ctx.arc(X(xC), Y(yC), 3.0, 0, 2*Math.PI);
+    ctx.arc(X(xC), Y(yC), 4.0, 0, 2*Math.PI);
     ctx.fill();
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(0,0,0,.25)";
@@ -4072,7 +4231,7 @@
     if (ui.cutShowTrace.checked && trace.length > 2){
       ctx.save();
       ctx.strokeStyle = "rgba(61,220,151,.82)";
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = 2.6;
       ctx.beginPath();
       for (let i=0;i<trace.length;i++){
         const p = trace[i];
@@ -4086,9 +4245,9 @@
     ctx.save();
     ctx.fillStyle = "rgba(61,220,151,.95)";
     ctx.shadowColor = "rgba(0,0,0,.45)";
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = 9;
     ctx.beginPath();
-    ctx.arc(X(xL), Y(yL), 3.0, 0, 2*Math.PI);
+    ctx.arc(X(xL), Y(yL), 4.0, 0, 2*Math.PI);
     ctx.fill();
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(0,0,0,.25)";
@@ -4280,9 +4439,18 @@
     const curveKey = ui.steCurveType.value || "ste_bar";
     const xVals = (R.x_vals || []).map(Number);
     const yRaw = (R[curveKey] || []).map(Number);
+    const smoothN = Math.max(0, Math.min(15, parseInt(ui.steSmooth?.value || "0", 10) || 0));
+    const yVals = yRaw.slice();
+    if (smoothN > 0 && yVals.length > (2*smoothN + 1)){
+      for (let i=smoothN;i<yVals.length-smoothN;i++){
+        let s=0, c=0;
+        for (let k=i-smoothN;k<=i+smoothN;k++){ s += yRaw[k]; c++; }
+        yVals[i] = s / Math.max(1, c);
+      }
+    }
     const pts = [];
-    for (let i=0;i<Math.min(xVals.length, yRaw.length);i++){
-      const xv = xVals[i], yv = yRaw[i];
+    for (let i=0;i<Math.min(xVals.length, yVals.length);i++){
+      const xv = xVals[i], yv = yVals[i];
       if (isFinite(xv) && isFinite(yv)) pts.push([xv, yv]);
     }
 
@@ -4364,6 +4532,16 @@
     ctx.fillStyle = "rgba(255,255,255,.92)";
     ctx.font = "900 12px " + getComputedStyle(document.body).fontFamily;
     ctx.fillText(`STE plot: ${steLabel(curveKey)}`, 14, 18);
+    ctx.fillStyle = "rgba(255,255,255,.76)";
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = "center";
+    ctx.fillText("Mesh position x [-]", rect.x + rect.w/2, cssH - 10);
+    ctx.save();
+    ctx.translate(14, rect.y + rect.h/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = "center";
+    ctx.fillText(`Response ${steLabel(curveKey)}`, 0, 0);
+    ctx.restore();
     ctx.restore();
   }
 
@@ -4501,8 +4679,10 @@
       const base = computeInvoluteLOAandProfile({m,z1,z2,alphaRad,Ck,Cf,x1,x2,N});
 
       const inter = checkOperatingInterferenceOperating(oper);
-      const uc1 = checkManufacturingUndercut(z1, alphaRad, Cf, Cc, x1);
-      const uc2 = checkManufacturingUndercut(z2, alphaRad, Cf, Cc, x2);
+      const cs1 = parseFloat(ui.ste_cs1?.value || "0.49");
+      const cs2 = parseFloat(ui.ste_cs2?.value || "0.49");
+      const uc1 = checkGeometryConstraints({z:z1, alphaRad, Cf, Cc, x:x1, cs:isFinite(cs1)?cs1:0.49});
+      const uc2 = checkGeometryConstraints({z:z2, alphaRad, Cf, Cc, x:x2, cs:isFinite(cs2)?cs2:0.49});
 
       let tip1 = NaN, tip2 = NaN;
 
@@ -4689,6 +4869,13 @@
   // ----------------------
   // Navigation + redraw
   // ----------------------
+  function updatePageLayout(){
+    const isGeometry = state.activePage === "geometry";
+    if (ui.resultsAside) ui.resultsAside.style.display = isGeometry ? "flex" : "none";
+    const shell = document.querySelector(".shell");
+    if (shell) shell.classList.toggle("noResults", !isGeometry);
+  }
+
   function setActivePage(key){
     state.activePage = key;
     for (const [k,node] of Object.entries(ui.pages)){
@@ -4702,6 +4889,11 @@
       MathJax.typesetPromise();
     }
 
+    if (key !== "geometry") {
+      meshAnimStop();
+    }
+
+    updatePageLayout();
     redrawCurrentPage();
   }
 
@@ -4721,7 +4913,7 @@
   }
 
   function setZoom(z){
-    state.view.zoom = clamp(z, 0.60, 12.00);
+    state.view.zoom = clamp(z, 0.60, 25.00);
     ui.zoom.value = String(state.view.zoom.toFixed(2));
     ui.zoomTxt.textContent = state.view.zoom.toFixed(2) + "×";
   }
@@ -4814,7 +5006,26 @@
     if (state.activePage === "geometry") drawMeshView();
   }, {passive:false});
 
+  if (ui.meshPhase) ui.meshPhase.addEventListener("input", () => {
+    state.meshAnim.t = clamp(parseFloat(ui.meshPhase.value), 0, 1);
+    if (ui.meshPhaseTxt) ui.meshPhaseTxt.textContent = fmt(state.meshAnim.t, 3);
+    if (state.activePage === "geometry") drawMeshView();
+  });
+  if (ui.meshSpeed) ui.meshSpeed.addEventListener("input", () => {
+    state.meshAnim.speed = clamp(parseFloat(ui.meshSpeed.value), 0.02, 4.0);
+    if (ui.meshSpeedTxt) ui.meshSpeedTxt.textContent = fmt(state.meshAnim.speed, 2) + "x";
+  });
+  if (ui.meshAnimToggle) ui.meshAnimToggle.addEventListener("click", () => meshAnimToggle());
+  if (ui.meshAnimReset) ui.meshAnimReset.addEventListener("click", () => {
+    meshAnimStop();
+    state.meshAnim.t = 0;
+    if (ui.meshPhase) ui.meshPhase.value = "0";
+    if (ui.meshPhaseTxt) ui.meshPhaseTxt.textContent = "0.000";
+    if (state.activePage === "geometry") drawMeshView();
+  });
+
   ui.btnCompute.addEventListener("click", computeAll);
+  if (ui.btnComputeSide) ui.btnComputeSide.addEventListener("click", computeAll);
   ui.btnRedraw.addEventListener("click", redrawCurrentPage);
 
   ui.navPages.addEventListener("click", (e) => {
@@ -4939,6 +5150,9 @@
   ui.steCurveType.addEventListener("change", () => {
     if (state.activePage === "ste") drawSTEPlot();
   });
+  if (ui.steSmooth) ui.steSmooth.addEventListener("input", () => {
+    if (state.activePage === "ste") drawSTEPlot();
+  });
 
   // AGMA
   ui.agmaMat.addEventListener("change", () => { applyMaterialPreset(); tryRecalcAGMA(); });
@@ -5053,3 +5267,5 @@
 
 </body>
 </html>
+
+
